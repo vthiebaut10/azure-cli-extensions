@@ -69,8 +69,7 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
     # once the connection has been established. If it's not possible to open the log file, we default to
     # waiting for about 2 minutes once the ssh process starts before cleaning up the files.
     if delete_privkey and (cert_file or private_key_file):
-        if os.path.isfile(log_file):
-            file_utils.delete_file(log_file, f"Couldn't delete existing log file {log_file}", True)
+        file_utils.delete_file(log_file, f"Couldn't delete existing log file {log_file}", True)
         cleanup_process = mp.Process(target=_do_cleanup, args=(private_key_file, cert_file, log_file))
         cleanup_process.start()
 
@@ -229,8 +228,8 @@ def _do_cleanup(private_key_file, cert_file, log_file=None):
                 if t1 < const.CLEANUP_TOTAL_TIME_LIMIT_IN_SECONDS:
                     time.sleep(const.CLEANUP_TOTAL_TIME_LIMIT_IN_SECONDS - t1)
 
-    if private_key_file and os.path.isfile(private_key_file):
+    if private_key_file:
         file_utils.delete_file(private_key_file, f"Failed to delete private key file '{private_key_file}'. ")
 
-    if cert_file and os.path.isfile(cert_file):
+    if cert_file:
         file_utils.delete_file(cert_file, f"Failed to delete certificate file '{cert_file}'. ")
