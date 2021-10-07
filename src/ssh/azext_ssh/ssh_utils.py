@@ -117,6 +117,7 @@ def write_ssh_config(relay_info, proxy_path, vm_name, ip, username,
                      cert_file, private_key_file, port, is_arc, config_path, overwrite, resource_group):
 
     common_lines = []
+    common_lines.append("Host " + resource_group + "-" + vm_name)
     common_lines.append("\tUser " + username)
     if cert_file:
         common_lines.append("\tCertificateFile " + cert_file)
@@ -130,13 +131,17 @@ def write_ssh_config(relay_info, proxy_path, vm_name, ip, username,
         elif private_key_file:
             relay_info_dir = os.path.dirname(private_key_file)
         else:
-            relay_info_dir = tempfile.mkdtemp(prefix="ssharcrelayinfo")
-        relay_info_path = os.path.join(relay_info_dir, "relay_info")
+            relay_info_dir = os.path.join(tempfile.gettempdir(), const.DEFAULT_KEY_TEMPDIR_NAME)
+            if not os.path.isdir(relay_info_dir):
+                new_dir = tempfile.mkdtemp()
+                os.rename(new_dir, os.path.join(os.path.dirname(new_dir), const.DEFAULT_KEY_TEMPDIR_NAME))
+
+        relay_info_filename = "relay_info_" + vm_name + "_" + resource_group
+        relay_info_path = os.path.join(relay_info_dir, relay_info_filename)
         file_utils.write_to_file(relay_info_path, 'w', relay_info,
                                  f"Couldn't write relay information to file {relay_info_path}", 'utf-8')
         oschmod.set_mode(relay_info_path, stat.S_IRUSR)
 
-        lines.append("Host " + vm_name)
         lines = lines + common_lines
         if port:
             lines.append("\tProxyCommand " + proxy_path + " " + "-r " + relay_info_path + " " + "-p " + port)
@@ -144,9 +149,8 @@ def write_ssh_config(relay_info, proxy_path, vm_name, ip, username,
             lines.append("\tProxyCommand " + proxy_path + " " + "-r " + relay_info_path)
     else:
         if resource_group and vm_name:
-            lines.append("Host " + resource_group + "-" + vm_name)
-            lines.append("\tHostName " + ip)
             lines = lines + common_lines
+            lines.append("\tHostName " + ip)
             if port:
                 lines.append("\tPort " + port)
 

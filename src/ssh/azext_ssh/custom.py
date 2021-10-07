@@ -191,8 +191,8 @@ def _check_or_create_public_private_files(public_key_file, private_key_file):
             new_temp_dir = tempfile.mkdtemp()
             os.rename(new_temp_dir, os.path.join(os.path.dirname(new_temp_dir), consts.DEFAULT_KEY_TEMPDIR_NAME))
         if not os.path.isfile(public_key_file) or not os.path.isfile(private_key_file):
-            # file_utils.delete_file(public_key_file, f"Couldn't delete existing public key {public_key_file}. ")
-            # file_utils.delete_file(private_key_file, f"Couldn't delete existing private key {private_key_file}. ")
+            file_utils.delete_file(public_key_file, f"Couldn't delete existing public key {public_key_file}. ")
+            file_utils.delete_file(private_key_file, f"Couldn't delete existing private key {private_key_file}. ")
             ssh_utils.create_ssh_keyfile(private_key_file)
 
     if not public_key_file:
