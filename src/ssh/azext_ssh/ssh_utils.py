@@ -14,6 +14,7 @@ import oschmod
 
 from knack import log
 from azure.cli.core import azclierror
+from azure.cli.core import telemetry
 
 from . import file_utils
 from . import constants as const
@@ -75,8 +76,10 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
         cleanup_process.start()
 
     logger.debug("Running ssh command %s", ' '.join(command))
+    t0 = time.time()
     subprocess.call(command, shell=platform.system() == 'Windows', env=env)
-
+    time_elapsed = time.time() - t0
+    telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHConnectionTime': time_elapsed})
     # If the cleanup process is still alive once the ssh process is terminated, we terminate it and make
     # sure the private key and certificate are deleted.
     if delete_privkey and (cert_file or private_key_file):
