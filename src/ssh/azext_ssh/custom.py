@@ -184,10 +184,16 @@ def _assert_args(resource_group, vm_name, ssh_ip, resource_id, cert_file, userna
 def _check_or_create_public_private_files(public_key_file, private_key_file):
     # If nothing is passed in create a temporary directory with a ephemeral keypair
     if not public_key_file and not private_key_file:
-        temp_dir = tempfile.mkdtemp(prefix="aadsshcert")
+        temp_dir = os.path.join(tempfile.gettempdir(), consts.DEFAULT_KEY_TEMPDIR_NAME)
         public_key_file = os.path.join(temp_dir, "id_rsa.pub")
         private_key_file = os.path.join(temp_dir, "id_rsa")
-        ssh_utils.create_ssh_keyfile(private_key_file)
+        if not os.path.isdir(temp_dir):
+            new_temp_dir = tempfile.mkdtemp()
+            os.rename(new_temp_dir, os.path.join(os.path.dirname(new_temp_dir), consts.DEFAULT_KEY_TEMPDIR_NAME))
+        if not os.path.isfile(public_key_file) or not os.path.isfile(private_key_file):
+            # file_utils.delete_file(public_key_file, f"Couldn't delete existing public key {public_key_file}. ")
+            # file_utils.delete_file(private_key_file, f"Couldn't delete existing private key {private_key_file}. ")
+            ssh_utils.create_ssh_keyfile(private_key_file)
 
     if not public_key_file:
         if private_key_file:
