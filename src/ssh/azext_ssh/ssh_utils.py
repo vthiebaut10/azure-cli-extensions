@@ -22,7 +22,7 @@ logger = log.get_logger(__name__)
 
 
 def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_file, private_key_file, port,
-                         is_arc, ssh_client_path, ssh_args, delete_privkey):
+                         is_arc, ssh_client_path, ssh_args, delete_privkey, delete_cert):
 
     if not ssh_client_path:
         ssh_client_path = _get_ssh_path()
@@ -33,7 +33,9 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
 
     ssh_client_log_file_arg = []
     # delete_privkey is only true for injected commands in the portal one click ssh experience
-    if delete_privkey and (cert_file or private_key_file):
+    # if delete privkey is true, delete certificate and private key
+    # if delete cert is true, delete only certificate
+    if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
         if '-E' in ssh_arg_list:
             # This condition should rarely be true
             index = ssh_arg_list.index('-E')
@@ -68,9 +70,9 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
     # If delete_privkey flag is true, we will try to clean the private key file and the certificate file
     # once the connection has been established. If it's not possible to open the log file, we default to
     # waiting for about 2 minutes once the ssh process starts before cleaning up the files.
-    if delete_privkey and (cert_file or private_key_file):
+    if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
         file_utils.delete_file(log_file, f"Couldn't delete existing log file {log_file}", True)
-        cleanup_process = mp.Process(target=_do_cleanup, args=(private_key_file, cert_file, log_file))
+        cleanup_process = mp.Process(target=_do_cleanup, args=(private_key_file, cert_file, log_file, delete_privkey, delete_cert))
         cleanup_process.start()
 
     logger.debug("Running ssh command %s", ' '.join(command))
@@ -78,11 +80,11 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
 
     # If the cleanup process is still alive once the ssh process is terminated, we terminate it and make
     # sure the private key and certificate are deleted.
-    if delete_privkey and (cert_file or private_key_file):
+    if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
         if cleanup_process.is_alive():
             cleanup_process.terminate()
             time.sleep(1)
-        _do_cleanup(private_key_file, cert_file)
+        _do_cleanup(private_key_file, cert_file, delete_privkey, delete_cert)
 
 
 def create_ssh_keyfile(private_key_file):
@@ -211,7 +213,7 @@ def _build_args(cert_file, private_key_file, port):
     return private_key + certificate + port_arg
 
 
-def _do_cleanup(private_key_file, cert_file, log_file=None):
+def _do_cleanup(private_key_file, cert_file, delete_privkey, delete_cert, log_file=None):
     if os.environ.get("AZUREPS_HOST_ENVIRONMENT") != "cloud-shell/1.0":
         raise azclierror.BadRequestError("Can't delete private key file. "
                                          "The --delete-private-key flag set to True, "
@@ -232,8 +234,8 @@ def _do_cleanup(private_key_file, cert_file, log_file=None):
                 if t1 < const.CLEANUP_TOTAL_TIME_LIMIT_IN_SECONDS:
                     time.sleep(const.CLEANUP_TOTAL_TIME_LIMIT_IN_SECONDS - t1)
 
-    if private_key_file:
+    if delete_privkey and private_key_file:
         file_utils.delete_file(private_key_file, f"Failed to delete private key file '{private_key_file}'. ")
 
-    if cert_file:
+    if (delete_privkey or delete_cert) and cert_file:
         file_utils.delete_file(cert_file, f"Failed to delete certificate file '{cert_file}'. ")

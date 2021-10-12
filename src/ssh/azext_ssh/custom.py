@@ -29,7 +29,7 @@ def ssh_vm(cmd, resource_group_name=None, vm_name=None, resource_id=None, ssh_ip
 
     _assert_args(resource_group_name, vm_name, ssh_ip, resource_id, cert_file, local_user)
     do_ssh_op = _decide_op_call(cmd, resource_group_name, vm_name, resource_id, ssh_ip, None, None,
-                                ssh_client_path, ssh_args, delete_privkey)
+                                ssh_client_path, ssh_args, delete_privkey, local_user)
     do_ssh_op(cmd, ssh_ip, public_key_file, private_key_file, local_user,
               cert_file, port, use_private_ip)
 
@@ -40,7 +40,7 @@ def ssh_config(cmd, config_path, resource_group_name=None, vm_name=None, ssh_ip=
 
     _assert_args(resource_group_name, vm_name, ssh_ip, resource_id, cert_file, local_user)
     do_ssh_op = _decide_op_call(cmd, resource_group_name, vm_name, resource_id, ssh_ip, config_path, overwrite,
-                                None, None, None)
+                                None, None, None, None)
     do_ssh_op(cmd, ssh_ip, public_key_file, private_key_file, local_user,
               cert_file, port, use_private_ip)
 
@@ -317,7 +317,7 @@ def _arc_list_access_details(cmd, resource_group, vm_name):
 
 
 def _decide_op_call(cmd, resource_group_name, vm_name, resource_id, ssh_ip, config_path, overwrite,
-                    ssh_client_path, ssh_args, delete_privkey):
+                    ssh_client_path, ssh_args, delete_privkey, local_user):
 
     # If the user provides an IP address the target will be treated as an Azure VM even if it is an
     # Arc Server. Which just means that the Connectivity Proxy won't be used to establish connection.
@@ -356,8 +356,11 @@ def _decide_op_call(cmd, resource_group_name, vm_name, resource_id, ssh_ip, conf
         op_call = functools.partial(ssh_utils.write_ssh_config, config_path=config_path, overwrite=overwrite,
                                     resource_group=resource_group_name)
     else:
+        delete_cert = False
+        if not local_user:
+            delete_cert = True
         op_call = functools.partial(ssh_utils.start_ssh_connection, ssh_client_path=ssh_client_path, ssh_args=ssh_args,
-                                    delete_privkey=delete_privkey)
+                                    delete_privkey=delete_privkey, delete_cert=delete_cert)
     do_ssh_op = functools.partial(_do_ssh_op, resource_group_name=resource_group_name, vm_name=vm_name,
                                   is_arc=is_arc_server, op_call=op_call)
 
