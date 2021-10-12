@@ -33,13 +33,17 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
 
     ssh_client_log_file_arg = []
     # delete_privkey is only true for injected commands in the portal one click ssh experience
-    # if delete privkey is true, delete certificate and private key
-    # if delete cert is true, delete only certificate
+    # if delete_privkey is true, delete certificate and private key
+    # if delete_cert is true, delete only certificate
+    # I admit that these names are confusing. We Should probably rename them.
     if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
+        
+        #Is there a point to do this if the os is Windows? It seems that it doesn't work, 
+        #It's just extra work
         if '-E' in ssh_arg_list:
-            # This condition should rarely be true
             index = ssh_arg_list.index('-E')
             log_file = ssh_arg_list[index + 1]
+            # if the user provides their own log file, we should probably not overwrite it
         else:
             if cert_file:
                 log_dir = os.path.dirname(cert_file)
@@ -49,6 +53,7 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
             log_file = os.path.join(log_dir, log_file_name)
             ssh_client_log_file_arg = ['-E', log_file]
 
+        # This might be a problem, because the user won't get the verbosity printed.
         if '-v' not in ssh_arg_list and '-vv' not in ssh_arg_list and '-vvv' not in ssh_arg_list:
             ssh_client_log_file_arg = ssh_client_log_file_arg + ['-v']
 
@@ -71,8 +76,9 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
     # once the connection has been established. If it's not possible to open the log file, we default to
     # waiting for about 2 minutes once the ssh process starts before cleaning up the files.
     if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
+        #We shouldn't delete the file if it's provided by the user
         file_utils.delete_file(log_file, f"Couldn't delete existing log file {log_file}", True)
-        cleanup_process = mp.Process(target=_do_cleanup, args=(private_key_file, cert_file, log_file, delete_privkey, delete_cert))
+        cleanup_process = mp.Process(target=_do_cleanup, args=(private_key_file, cert_file, delete_privkey, delete_cert, log_file))
         cleanup_process.start()
 
     logger.debug("Running ssh command %s", ' '.join(command))
@@ -80,6 +86,7 @@ def start_ssh_connection(relay_info, proxy_path, vm_name, ip, username, cert_fil
 
     # If the cleanup process is still alive once the ssh process is terminated, we terminate it and make
     # sure the private key and certificate are deleted.
+    # Should we also delete the log file if it's not provided by the user? Or will this not allow the user to ever look at their client side logs?
     if (delete_privkey and (cert_file or private_key_file)) or (delete_cert and cert_file):
         if cleanup_process.is_alive():
             cleanup_process.terminate()
@@ -214,7 +221,9 @@ def _build_args(cert_file, private_key_file, port):
 
 
 def _do_cleanup(private_key_file, cert_file, delete_privkey, delete_cert, log_file=None):
-    if os.environ.get("AZUREPS_HOST_ENVIRONMENT") != "cloud-shell/1.0":
+    print(delete_privkey)
+    print(delete_cert)
+    if delete_privkey and os.environ.get("AZUREPS_HOST_ENVIRONMENT") != "cloud-shell/1.0":
         raise azclierror.BadRequestError("Can't delete private key file. "
                                          "The --delete-private-key flag set to True, "
                                          "but this is not an Azure Cloud Shell session.")
