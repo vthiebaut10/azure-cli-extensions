@@ -2,15 +2,8 @@ resources:
 - repo: self
 
 trigger:
-  batch: true
-  branches:
-    include:
-      - '*'
-
-pr:
-  branches:
-    include:
-      - '*'
+- master
+- ssharc-buildpackage
 
 jobs:
 - job: CredScan
@@ -33,8 +26,8 @@ jobs:
       TSLint: false
       ToolLogsNotFoundAction: 'Standard'
 
-- job: CheckLicenseHeader
-  displayName: "Check License"
+- job: Build Package
+  displayName: "Build Package"
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
@@ -62,7 +55,8 @@ jobs:
       azdev --version
       az --version
 
-      azdev verify license
+      azdev extension build ssh
+  - powershell: dir
 
 - job: StaticAnalysis
   displayName: "Static Analysis"
@@ -77,97 +71,3 @@ jobs:
       displayName: 'Install wheel, pylint, flake8, requests'
     - bash: python scripts/ci/source_code_static_analysis.py
       displayName: "Static Analysis"
-
-- job: IndexVerify
-  displayName: "Verify Extensions Index"
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-  - task: UsePythonVersion@0
-    displayName: 'Use Python 3.7'
-    inputs:
-      versionSpec: 3.7
-  - bash: |
-      #!/usr/bin/env bash
-      set -ev
-      pip install wheel==0.30.0 requests packaging
-      export CI="ADO"
-      python ./scripts/ci/test_index.py -v
-    displayName: "Verify Extensions Index"
-
-- job: SourceTests
-  displayName: "Integration Tests, Build Tests"
-  pool:
-    vmImage: 'ubuntu-16.04'
-  strategy:
-    matrix:
-      Python36:
-        python.version: '3.6'
-      Python38:
-        python.version: '3.8'
-  steps:
-    - task: UsePythonVersion@0
-      displayName: 'Use Python $(python.version)'
-      inputs:
-        versionSpec: '$(python.version)'
-    - bash: pip install wheel==0.30.0
-      displayName: 'Install wheel==0.30.0'
-    - bash: ./scripts/ci/test_source.sh
-      displayName: 'Run integration test and build test'
-      env:
-        ADO_PULL_REQUEST_LATEST_COMMIT: $(System.PullRequest.SourceCommitId)
-        ADO_PULL_REQUEST_TARGET_BRANCH: $(System.PullRequest.TargetBranch)
-
-- job: LintModifiedExtensions
-  displayName: "CLI Linter on Modified Extensions"
-  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-    - task: UsePythonVersion@0
-      displayName: 'Use Python 3.6'
-      inputs:
-        versionSpec: 3.6
-    - bash: |
-        set -ev
-
-        # prepare and activate virtualenv
-        pip install virtualenv
-        python -m virtualenv venv/
-        source ./venv/bin/activate
-
-        # clone azure-cli
-        git clone --single-branch -b dev https://github.com/Azure/azure-cli.git ../azure-cli
-
-        python -m pip install -U pip
-        pip install azdev
-
-        azdev --version
-
-        azdev setup -c ../azure-cli -r ./
-
-        # overwrite the default AZURE_EXTENSION_DIR set by ADO
-        AZURE_EXTENSION_DIR=~/.azure/cliextensions az --version
-
-        AZURE_EXTENSION_DIR=~/.azure/cliextensions python scripts/ci/verify_linter.py
-      displayName: "CLI Linter on Modified Extension"
-      env:
-        ADO_PULL_REQUEST_LATEST_COMMIT: $(System.PullRequest.SourceCommitId)
-        ADO_PULL_REQUEST_TARGET_BRANCH: $(System.PullRequest.TargetBranch)
-
-- job: IndexRefDocVerify
-  displayName: "Verify Ref Docs"
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-  - task: UsePythonVersion@0
-    displayName: 'Use Python 3.7'
-    inputs:
-      versionSpec: 3.7
-  - bash: pip install wheel==0.30.0
-    displayName: 'Install wheel==0.30.0'
-  - task: Bash@3
-    displayName: "Verify Extension Ref Docs"
-    inputs:
-      targetType: 'filePath'
-      filePath: scripts/ci/test_index_ref_doc.sh
