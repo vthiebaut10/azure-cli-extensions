@@ -44,3 +44,8 @@ jobs:
       python -m venv env/
 
       env/scripts/activate
+
+      git clone -q --single-branch -b dev https://github.com/Azure/azure-cli.git ../azure-cli
+
+      cd ..
+      ls
