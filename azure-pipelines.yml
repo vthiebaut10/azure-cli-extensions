@@ -45,4 +45,6 @@ jobs:
 
       pwd
 
+      cd env
+
       ls
