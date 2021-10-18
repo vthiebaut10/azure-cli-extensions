@@ -43,8 +43,4 @@ jobs:
       # prepare and activate virtualenv
       python -m venv env/
 
-      pwd
-
-      cd env
-
-      ls
+      source env/bin/activate
