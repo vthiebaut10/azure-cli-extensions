@@ -43,9 +43,14 @@ jobs:
       # prepare and activate virtualenv
       python -m venv env/
 
+      chmod +x ./env/bin/activate
       env/scripts/activate
 
       git clone -q --single-branch -b dev https://github.com/Azure/azure-cli.git ../azure-cli
 
-      cd ..
-      ls
+      python -m pip install -U pip
+      pip install -q azdev
+      azdev setup -c ../azure-cli -r ./
+      
+      azdev --version
+      az --version
