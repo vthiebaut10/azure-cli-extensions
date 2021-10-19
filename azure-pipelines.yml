@@ -35,4 +35,6 @@ jobs:
       azdev --version
       az --version
 
+      azdev extension build ssh
+      dir
       
