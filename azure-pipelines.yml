@@ -66,6 +66,16 @@ jobs:
     inputs:
       pathToPublish: '$(Build.ArtifactStagingDirectory)'
       artifactName: drop
+  - task: EsrpMalwareScanning@1
+    displayName: ESRP Malware Scanning
+    inputs:
+      ConnectedServiceName: 'pwshScanning'
+      FolderPath: '$(Build.ArtifactStagingDirectory)'
+      Pattern: '*.whl'
+      Region: 'PuertoRico'
+      SessionTimeout: '30'
+      MaxConcurrency: '50'
+      MaxRetryAttempts: '5'
 
 
   
