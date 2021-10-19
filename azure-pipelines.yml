@@ -37,4 +37,14 @@ jobs:
 
       azdev extension build ssh
       dir
+
+      Write-Verbose $(Build.ArtifactStagingDirectory) -Verbose
+      Copy-Item -Path ./dist/* -Destination $(Build.ArtifactStagingDirectory) 
+
+      cd $(Build.ArtifactStagingDirectory) 
+      dir
+
+
+
+  
       
