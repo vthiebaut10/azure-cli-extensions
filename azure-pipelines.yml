@@ -7,49 +7,31 @@ trigger:
     include:
       - ssharc-buildpackage
 
-jobs:
-- job: CredScan
-  displayName: "Credential Scan"
-  pool:
-    vmImage: "windows-2019"
-  steps:
-  - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-credscan.CredScan@2
-    displayName: 'Run Credential Scanner'
-    inputs:
-      toolMajorVersion: V2
-      suppressionsFile: './scripts/ci/credscan/CredScanSuppressions.json'
-  - task: ms-codeanalysis.vss-microsoft-security-code-analysis-devops.build-task-postanalysis.PostAnalysis@1
-    displayName: 'Post Analysis'
-    inputs:
-      AllTools: false
-      BinSkim: false
-      CredScan: true
-      RoslynAnalyzers: false
-      TSLint: false
-      ToolLogsNotFoundAction: 'Standard'
-
 - job: BuildPackage
   displayName: "Build Package"
   pool:
     name: PowerShell1ES
   steps:
   - task: UsePythonVersion@0
-    displayName: 'Use Python 3.6'
+    displayName: 'Use Python 3.8'
     inputs:
-      versionSpec: 3.6
-  - bash: |
-      set -ev
-
-      # prepare and activate virtualenv
-      python -m venv env/
-
-      env/scripts/activate
-
+      versionSpec: 3.8
+  - powershell: |
+      Write-Verbose "Cloning az cli" -Verbose
       git clone -q --single-branch -b dev https://github.com/Azure/azure-cli.git ../azure-cli
 
+      python -m venv env
+
+      Write-Verbose "Activate Env" -Verbose
+      env\Scripts\activate.ps1
+
       python -m pip install -U pip
-      pip install -q azdev
+
+      pip install azdev
+
       azdev setup -c ../azure-cli -r ./
-      
+
       azdev --version
       az --version
+
+      
