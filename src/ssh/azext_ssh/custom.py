@@ -78,6 +78,7 @@ def _do_ssh_op(cmd, ssh_ip, public_key_file, private_key_file, username,
     proxy_path = None
     relay_info = None
     if is_arc:
+        _is_aad_extension_installed(cmd, resource_group_name, vm_name)
         proxy_path = _arc_get_client_side_proxy()
         relay_info = _arc_list_access_details(cmd, resource_group_name, vm_name)
     else:
@@ -379,3 +380,11 @@ def _check_if_arc_server(cmd, resource_group_name, vm_name):
     except ResourceNotFoundError:
         return False
     return True
+
+def _is_aad_extension_installed(cmd, resource_group_name, vm_name):
+    from azext_ssh._client_factory import cf_machine_extension
+    extension = "AADSSHLogin"
+    client = cf_machine_extension(cmd.cli_ctx)
+    client.get(resource_group_name=resource_group_name, machine_name=vm_name, extension_name=extension)
+
+
