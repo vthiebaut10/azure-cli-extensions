@@ -381,10 +381,15 @@ def _check_if_arc_server(cmd, resource_group_name, vm_name):
         return False
     return True
 
+
 def _is_aad_extension_installed(cmd, resource_group_name, vm_name):
     from azext_ssh._client_factory import cf_machine_extension
-    extension = "AADSSHLogin"
+    from azure.core.exceptions import ResourceNotFoundError
+    extension = "AADSSHLoginForLinux"
     client = cf_machine_extension(cmd.cli_ctx)
-    client.get(resource_group_name=resource_group_name, machine_name=vm_name, extension_name=extension)
-
-
+    try:
+        client.get(resource_group_name=resource_group_name, machine_name=vm_name, extension_name=extension)
+    except ResourceNotFoundError as e:
+        raise azclierror.ResourceNotFoundError(f"The extension {extension} must be installed in the target machine. "
+                                               f"Run \"az connectedmachine extension create --machine-name {vm_name} "
+                                               f"--resource-group {resource_group_name} --name {extension}\"") from e
