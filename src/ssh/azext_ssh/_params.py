@@ -22,7 +22,7 @@ def load_arguments(self, _):
         c.argument('port', options_list=['--port'], help='SSH port')
         c.argument('ssh_client_path', options_list=['--ssh-client-path'],
                    help='Path to ssh executable. Default to ssh pre-installed if not provided.')
-        c.argument('delete_privkey', options_list=['--delete-private-key'],
+        c.argument('delete_credentials', options_list=['--delete-private-key'],
                    help=('This is an internal argument. This argument is used by Azure Portal to provide a one click '
                          'SSH login experience in Cloud shell.'),
                    deprecate_info=c.deprecate(hide=True), action='store_true')
@@ -41,13 +41,17 @@ def load_arguments(self, _):
                    help='The username for a local user')
         c.argument('overwrite', action='store_true', options_list=['--overwrite'],
                    help='Overwrites the config file if this flag is set')
+        c.argument('credentials_folder', options_list=['--keys-destination-folder', '--keys-dest-folder'],
+                   help='Folder where new generated keys will be stored.')
         c.argument('port', options_list=['--port'], help='Port to connect to on the remote host.')
         c.argument('cert_file', options_list=['--certificate-file', '-c'], help='Path to certificate file')
 
     with self.argument_context('ssh cert') as c:
         c.argument('cert_path', options_list=['--file', '-f'],
                    help='The file path to write the SSH cert to, defaults to public key path with -aadcert.pub appened')
-        c.argument('public_key_file', options_list=['--public-key-file', '-p'], help='The RSA public key file path')
+        c.argument('public_key_file', options_list=['--public-key-file', '-p'],
+                   help='The RSA public key file path. If not provided, '
+                   'generated key pair is stored in the same directory as --file.')
 
     with self.argument_context('ssh arc') as c:
         c.argument('vm_name', options_list=['--vm-name', '--name', '-n'], help='The name of the Arc Server')
@@ -60,7 +64,7 @@ def load_arguments(self, _):
         c.argument('port', options_list=['--port'], help='Port to connect to on the remote host.')
         c.argument('ssh_client_path', options_list=['--ssh-client-path'],
                    help='Path to ssh executable. Default to ssh pre-installed if not provided.')
-        c.argument('delete_privkey', options_list=['--delete-private-key'],
+        c.argument('delete_credentials', options_list=['--delete-private-key'],
                    help=('This is an internal argument. This argument is used by Azure Portal to provide a one click '
                          'SSH login experience in Cloud shell.'),
                    deprecate_info=c.deprecate(hide=True), action='store_true')
