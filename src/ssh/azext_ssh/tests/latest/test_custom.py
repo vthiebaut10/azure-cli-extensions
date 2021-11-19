@@ -79,8 +79,10 @@ class SshCustomCommandTest(unittest.TestCase):
 
     @mock.patch('azext_ssh.custom._assert_args')
     @mock.patch('azext_ssh.custom._do_ssh_op')
-    def test_ssh_arc(self, mock_do_op, mock_assert_args):
+    @mock.patch('azext_ssh.custom._validate_arc_server')
+    def test_ssh_arc(self, mock_validate, mock_do_op, mock_assert_args):
         cmd = mock.Mock()
+        mock_validate.return_value = True
         custom.ssh_arc(cmd, 'rg', 'vm', 'public', 'private', 'user', 'cert', 'port', 'path/to/ssh', False, 'ssh_args')
         mock_assert_args.assert_called_once_with('rg', 'vm', None, 'Microsoft.HybridCompute', 'cert', 'user')
         mock_do_op.assert_called_once_with(cmd, 'vm', 'rg', None, 'public', 'private', 'user', 'cert', 'port', False, None, mock.ANY, True)
@@ -115,8 +117,10 @@ class SshCustomCommandTest(unittest.TestCase):
     @mock.patch('azext_ssh.custom._assert_args')
     @mock.patch('azext_ssh.custom._do_ssh_op')
     @mock.patch('os.environ.get')
-    def test_ssh_arc_delete_credentials_cloudshell(self, mock_getenv, mock_do_op, mock_assert_args):
+    @mock.patch('azext_ssh.custom._validate_arc_server')
+    def test_ssh_arc_delete_credentials_cloudshell(self, mock_validate, mock_getenv, mock_do_op, mock_assert_args):
         mock_getenv.return_value = "cloud-shell/1.0"
+        mock_validate.return_value = True
         cmd = mock.Mock()
         custom.ssh_arc(cmd, 'rg', 'vm', 'public', 'private', 'user', 'cert', 'port', 'path/to/ssh', True, 'ssh_args')
         mock_assert_args.assert_called_once_with('rg', 'vm', None, 'Microsoft.HybridCompute', 'cert', 'user')
@@ -214,8 +218,10 @@ class SshCustomCommandTest(unittest.TestCase):
         mock_check_arc.assert_called_once_with(cmd, 'rg', 'vm')
         mock_check_az_vm.assert_called_once_with(cmd, 'rg', 'vm')
 
-    def test_decide_op_call_arc_with_resource_type(self):
+    @mock.patch('azext_ssh.custom._validate_arc_server')
+    def test_decide_op_call_arc_with_resource_type(self, mock_validate):
         cmd = mock.Mock()
+        mock_validate.return_value = True
         expected_result = functools.partial(custom._do_ssh_op, is_arc=True,  
                                             op_call=functools.partial(ssh_utils.start_ssh_connection, ssh_client_path='path', ssh_args='args', delete_credentials=True))
         result = custom._decide_op_call(cmd, 'rg', 'vm', None, 'Microsoft.HybridCompute', None, False, "path", "args", True, None)
