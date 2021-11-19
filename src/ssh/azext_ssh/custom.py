@@ -107,8 +107,8 @@ def _do_ssh_op(cmd, vm_name, resource_group_name, ssh_ip, public_key_file, priva
     proxy_path = None
     relay_info = None
     if is_arc:
-        proxy_path = _arc_get_client_side_proxy()
         relay_info = _arc_list_access_details(cmd, resource_group_name, vm_name)
+        proxy_path = _arc_get_client_side_proxy()
     else:
         ssh_ip = ssh_ip or ip_utils.get_ssh_ip(cmd, resource_group_name, vm_name, use_private_ip)
         if not ssh_ip:
@@ -361,6 +361,7 @@ def _arc_get_client_side_proxy():
 # Get the Access Details to connect to Arc Connectivity platform from the HybridConnectivity RP
 def _arc_list_access_details(cmd, resource_group, vm_name):
     from azext_ssh._client_factory import cf_endpoint
+    from azure.core.exceptions import HttpResponseError
     client = cf_endpoint(cmd.cli_ctx)
     try:
         t0 = time.time()
@@ -368,11 +369,17 @@ def _arc_list_access_details(cmd, resource_group, vm_name):
                                          endpoint_name="default")
         time_elapsed = time.time() - t0
         telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
+    # If user is not authorized, they will get a HttpResponseError. Suggest checking the subscription.
+    except HttpResponseError as e:
+        raise azclierror.ClientRequestError(f"Request for Azure Relay Information Failed."
+                                            "Plase ensure you are using the correct subscription by running \"az account show\", "
+                                            "and use the \"az account set\" command to set the correct subscription.\n"
+                                            f"Error:\n{str(e)}")
     except Exception as e:
         telemetry.set_exception(exception='Call to listCredentials failed',
                                 fault_type=consts.LIST_CREDENTIALS_FAILED_FAULT_TYPE,
                                 summary=f'listCredentials failed with error: {str(e)}.')
-        raise azclierror.ClientRequestError(f"Request for Azure Relay Information Failed: {str(e)}")
+        raise azclierror.ClientRequestError(f"Request for Azure Relay Information Failed. Error:\n{str(e)}")
 
     result_string = json.dumps(
         {
