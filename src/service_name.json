@@ -70,11 +70,6 @@
     "URL": "https://docs.microsoft.com/azure/cloud-services-extended-support/"
   },
   {
-    "Command": "az codespace",
-    "AzureServiceName": "Visual Studio",
-    "URL": "https://docs.microsoft.com/visualstudio/codespaces/overview/what-is-vsonline"
-  },
-  {
     "Command": "az communication",
     "AzureServiceName": "Azure Communication Service",
     "URL": "https://docs.microsoft.com/azure/communication-services/"
@@ -100,13 +95,18 @@
     "URL": "https://docs.microsoft.com/azure/azure-arc/servers/overview"
   },
   {
+    "Command": "az containerapp",
+    "AzureServiceName": "Azure Container Apps",
+    "URL": "https://docs.microsoft.com/en-us/azure/container-apps/"
+  },
+  {
     "Command": "az costmanagement",
     "AzureServiceName": "Azure Cost Management + Billing",
     "URL": "https://docs.microsoft.com/azure/cost-management-billing/"
   },
   {
     "Command": "az csvmware",
-    "AzureServiceName": "Azure VMWare Solution",
+    "AzureServiceName": "Azure VMware Solution",
     "URL": "https://docs.microsoft.com/azure/vmware-cloudsimple/cloudsimple-vmware-solutions-overview"
   },
   {
@@ -466,7 +466,7 @@
   },
   {
     "Command": "az vmware",
-    "AzureServiceName": "Azure VMWare Solution",
+    "AzureServiceName": "Azure VMware Solution",
     "URL": "https://docs.microsoft.com/azure/azure-vmware/"
   },
   {
