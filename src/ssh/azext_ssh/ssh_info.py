@@ -53,7 +53,7 @@ class SSHSession():
         return False
 
     def get_host(self):
-        if not self.is_arc():
+        if not self.use_proxy():
             if self.local_user and self.ip:
                 return self.local_user + "@" + self.ip
         else:
@@ -71,7 +71,7 @@ class SSHSession():
             private_key = ["-i", self.private_key_file]
         if self.cert_file:
             certificate = ["-o", "CertificateFile=\"" + self.cert_file + "\""]
-        if self.is_arc():
+        if self.use_proxy():
             if self.port:
                 proxy_command = ["-o", f"ProxyCommand=\"{self.proxy_path}\" -p {self.port}"]
             else:
@@ -86,7 +86,7 @@ class ConfigSession():
     # pylint: disable=too-many-instance-attributes
     def __init__(self, config_path, resource_group_name, vm_name, ssh_ip, public_key_file,
                  private_key_file, overwrite, use_private_ip, local_user, cert_file, port,
-                 resource_type, credentials_folder, ssh_proxy_folder, ssh_client_folder):
+                 resource_type, credentials_folder, ssh_proxy_folder, ssh_client_folder, ggal):
         self.config_path = os.path.abspath(config_path)
         self.resource_group_name = resource_group_name
         self.vm_name = vm_name
@@ -99,6 +99,7 @@ class ConfigSession():
         self.proxy_path = None
         self.relay_info = None
         self.relay_info_path = None
+        self.ggal = ggal
         self.public_key_file = os.path.abspath(public_key_file) if public_key_file else None
         self.private_key_file = os.path.abspath(private_key_file) if private_key_file else None
         self.cert_file = os.path.abspath(cert_file) if cert_file else None
@@ -110,12 +111,17 @@ class ConfigSession():
         if self.resource_type == "Microsoft.HybridCompute":
             return True
         return False
+    
+    def use_proxy(self):
+        if self.is_arc() or self.ggal:
+            return True
+        return False
 
     def get_config_text(self, is_aad):
         lines = [""]
-        if self.is_arc():
+        if self.use_proxy():
             self.relay_info_path = self._create_relay_info_file()
-            lines = lines + self._get_arc_entry(is_aad)
+            lines = lines + self._get_proxy_entry(is_aad)
         else:
             if self.resource_group_name and self.vm_name and self.ip:
                 lines = lines + self._get_rg_and_vm_entry(is_aad)
@@ -125,7 +131,7 @@ class ConfigSession():
             lines = lines + self._get_ip_entry(is_aad)
         return lines
 
-    def _get_arc_entry(self, is_aad):
+    def _get_proxy_entry(self, is_aad):
         lines = []
         if is_aad:
             lines.append("Host " + self.resource_group_name + "-" + self.vm_name)

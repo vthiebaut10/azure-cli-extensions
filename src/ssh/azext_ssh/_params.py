@@ -32,7 +32,7 @@ def load_arguments(self, _):
         c.argument('ssh_proxy_folder', options_list=['--ssh-proxy-folder'],
                    help=('Path to the folder where the ssh proxy should be saved. '
                          'Default to .clientsshproxy folder in user\'s home directory if not provided.'))
-        c.argument('use_connectivity_platform', options_list=['--ggal'], action='store_true', help='Internal parameter.')
+        c.argument('ggal', options_list=['--ggal'], action='store_true', help='Internal parameter.')
         c.positional('ssh_args', nargs='*', help='Additional arguments passed to OpenSSH')
 
     with self.argument_context('ssh config') as c:
@@ -59,6 +59,7 @@ def load_arguments(self, _):
         c.argument('ssh_client_folder', options_list=['--ssh-client-folder'],
                    help='Folder path that contains ssh executables (ssh.exe, ssh-keygen.exe, etc). '
                    'Default to ssh pre-installed if not provided.')
+        c.argument('ggal', options_list=['--ggal'], action='store_true', help='Internal parameter.')
 
     with self.argument_context('ssh cert') as c:
         c.argument('cert_path', options_list=['--file', '-f'],

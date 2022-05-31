@@ -38,7 +38,7 @@ def start_ssh_connection(op_info, delete_keys, delete_cert):
             ssh_arg_list = op_info.ssh_args
 
         env = os.environ.copy()
-        if op_info.is_arc():
+        if op_info.use_proxy():
             env['SSHPROXY_RELAY_INFO'] = connectivity_utils.format_relay_info_string(op_info.relay_info)
 
         # Get ssh client before starting the clean up process in case there is an error in getting client.
@@ -85,7 +85,7 @@ def start_ssh_connection(op_info, delete_keys, delete_cert):
 def write_ssh_config(config_info, delete_keys, delete_cert):
     # if delete cert is true, then this is AAD login.
     config_text = config_info.get_config_text(delete_cert)
-    _issue_config_cleanup_warning(delete_cert, delete_keys, config_info.is_arc(),
+    _issue_config_cleanup_warning(delete_cert, delete_keys, config_info.use_proxy(),
                                   config_info.cert_file, config_info.relay_info_path,
                                   config_info.ssh_client_folder)
     if config_info.overwrite:

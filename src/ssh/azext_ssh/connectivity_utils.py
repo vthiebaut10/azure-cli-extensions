@@ -40,20 +40,18 @@ def get_relay_information(cmd, op_info, certificate_validity_in_seconds):
     try:
         t0 = time.time()
         if op_info.is_arc():
-            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group,
+            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group_name,
                                       namespace="Microsoft.HybridCompute", type="machines", name=op_info.vm_name)
         else:
-            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group,
+            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group_name,
                                       namespace="Microsoft.Compute", type="virtualMachines", name=op_info.vm_name)
-
-        print(az_resource_id)
 
         result = client.list_credentials(resource_uri=az_resource_id, endpoint_name="default", expiresin=certificate_validity_in_seconds)
         time_elapsed = time.time() - t0
         telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
     except ResourceNotFoundError:
         logger.debug("Default Endpoint couldn't be found. Trying to create Default Endpoint.")
-        _create_default_endpoint(az_resource_id, op_info.vm_name, op_info.resource_group, client)
+        _create_default_endpoint(az_resource_id, op_info.vm_name, op_info.resource_group_name, client)
         try:
             t0 = time.time()
             result = client.list_credentials(resource_uri=az_resource_id, endpoint_name="default", expiresin=certificate_validity_in_seconds)
