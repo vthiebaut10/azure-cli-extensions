@@ -22,7 +22,7 @@ class SSHSession():
     # pylint: disable=too-many-instance-attributes
     def __init__(self, resource_group_name, vm_name, ssh_ip, public_key_file, private_key_file,
                  use_private_ip, local_user, cert_file, port, ssh_client_folder, ssh_args,
-                 delete_credentials, resource_type, ssh_proxy_folder, credentials_folder):
+                 delete_credentials, resource_type, ssh_proxy_folder, credentials_folder, ggal):
         self.resource_group_name = resource_group_name
         self.vm_name = vm_name
         self.ip = ssh_ip
@@ -34,6 +34,7 @@ class SSHSession():
         self.resource_type = resource_type
         self.proxy_path = None
         self.relay_info = None
+        self.ggal = ggal
         self.public_key_file = os.path.abspath(public_key_file) if public_key_file else None
         self.private_key_file = os.path.abspath(private_key_file) if private_key_file else None
         self.cert_file = os.path.abspath(cert_file) if cert_file else None
@@ -43,6 +44,11 @@ class SSHSession():
 
     def is_arc(self):
         if self.resource_type == "Microsoft.HybridCompute":
+            return True
+        return False
+
+    def use_proxy(self):
+        if self.is_arc() or self.ggal:
             return True
         return False
 

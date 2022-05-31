@@ -30,10 +30,13 @@ from . import constants as const
 
 logger = log.get_logger(__name__)
 
+# Add a parameter for connecting to azure vms via connectivity platform
+
 
 def ssh_vm(cmd, resource_group_name=None, vm_name=None, ssh_ip=None, public_key_file=None,
            private_key_file=None, use_private_ip=False, local_user=None, cert_file=None, port=None,
-           ssh_client_folder=None, delete_credentials=False, resource_type=None, ssh_proxy_folder=None, ssh_args=None):
+           ssh_client_folder=None, delete_credentials=False, resource_type=None, ssh_proxy_folder=None,
+           ggal=False, ssh_args=None):
 
     # delete_credentials can only be used by Azure Portal to provide one-click experience on CloudShell.
     if delete_credentials and os.environ.get("AZUREPS_HOST_ENVIRONMENT") != "cloud-shell/1.0":
@@ -52,7 +55,7 @@ def ssh_vm(cmd, resource_group_name=None, vm_name=None, ssh_ip=None, public_key_
     ssh_session = ssh_info.SSHSession(resource_group_name, vm_name, ssh_ip, public_key_file,
                                       private_key_file, use_private_ip, local_user, cert_file, port,
                                       ssh_client_folder, ssh_args, delete_credentials, resource_type,
-                                      ssh_proxy_folder, credentials_folder)
+                                      ssh_proxy_folder, credentials_folder, ggal)
     ssh_session.resource_type = _decide_resource_type(cmd, ssh_session)
     _do_ssh_op(cmd, ssh_session, op_call)
 
@@ -142,7 +145,7 @@ def ssh_arc(cmd, resource_group_name=None, vm_name=None, public_key_file=None, p
 
 def _do_ssh_op(cmd, op_info, op_call):
     # Get ssh_ip before getting public key to avoid getting "ResourceNotFound" exception after creating the keys
-    if not op_info.is_arc():
+    if not op_info.use_proxy():
         if op_info.ssh_proxy_folder:
             logger.warning("Target machine is not an Arc Server, --ssh-proxy-folder value will be ignored.")
         op_info.ip = op_info.ip or ip_utils.get_ssh_ip(cmd, op_info.resource_group_name,
@@ -165,7 +168,7 @@ def _do_ssh_op(cmd, op_info, op_call):
                                                   op_info.credentials_folder, op_info.ssh_client_folder)
         op_info.cert_file, op_info.local_user = _get_and_write_certificate(cmd, op_info.public_key_file,
                                                                            None, op_info.ssh_client_folder)
-        if op_info.is_arc():
+        if op_info.use_proxy():
             # pylint: disable=broad-except
             try:
                 cert_lifetime = ssh_utils.get_certificate_lifetime(op_info.cert_file,
@@ -174,10 +177,9 @@ def _do_ssh_op(cmd, op_info, op_call):
                 logger.warning("Couldn't determine certificate expiration. Error: %s", str(e))
 
     try:
-        if op_info.is_arc():
+        if op_info.use_proxy():
             op_info.proxy_path = connectivity_utils.get_client_side_proxy(op_info.ssh_proxy_folder)
-            op_info.relay_info = connectivity_utils.get_relay_information(cmd, op_info.resource_group_name,
-                                                                          op_info.vm_name, cert_lifetime)
+            op_info.relay_info = connectivity_utils.get_relay_information(cmd, op_info, cert_lifetime)
     except Exception as e:
         if delete_keys or delete_cert:
             logger.debug("An error occured before operation concluded. Deleting generated keys: %s %s %s",
