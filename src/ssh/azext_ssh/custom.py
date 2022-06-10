@@ -145,9 +145,9 @@ def ssh_arc(cmd, resource_group_name=None, vm_name=None, public_key_file=None, p
 
 def _do_ssh_op(cmd, op_info, op_call):
     # Get ssh_ip before getting public key to avoid getting "ResourceNotFound" exception after creating the keys
-    if not op_info.use_proxy():
-        if op_info.ssh_proxy_folder:
-            logger.warning("Target machine is not an Arc Server, --ssh-proxy-folder value will be ignored.")
+    if not op_info.is_arc():
+        #if op_info.ssh_proxy_folder:
+        #    logger.warning("Target machine is not an Arc Server, --ssh-proxy-folder value will be ignored.")
         op_info.ip = op_info.ip or ip_utils.get_ssh_ip(cmd, op_info.resource_group_name,
                                                        op_info.vm_name, op_info.use_private_ip)
         if not op_info.ip:

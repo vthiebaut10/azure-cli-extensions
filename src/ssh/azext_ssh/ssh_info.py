@@ -122,6 +122,16 @@ class ConfigSession():
         if self.use_proxy():
             self.relay_info_path = self._create_relay_info_file()
             lines = lines + self._get_proxy_entry(is_aad)
+
+            if not self.is_arc() and self.ip:
+                # if this is a VM that has an ip, allow "ssh user@ip -F ./config"
+                lines.append("Host " + self.ip)
+                if self.port:
+                    lines.append("\tProxyCommand \"" + self.proxy_path + "\" " + "-r \"" + self.relay_info_path + "\" "
+                                 + "-p " + self.port)
+                else:
+                    lines.append("\tProxyCommand \"" + self.proxy_path + "\" " + "-r \"" + self.relay_info_path + "\"")
+
         else:
             if self.resource_group_name and self.vm_name and self.ip:
                 lines = lines + self._get_rg_and_vm_entry(is_aad)
