@@ -33,7 +33,7 @@ class HybridConnectivityManagementAPIConfiguration(Configuration):
     def __init__(
         self,
         credential,  # type: "TokenCredential"
-        subscription_id,  # type: str
+        subscription_id, # type: str
         **kwargs  # type: Any
     ):
         # type: (...) -> None
