@@ -38,11 +38,11 @@ def start_ssh_connection(op_info, delete_keys, delete_cert):
             ssh_arg_list = op_info.ssh_args
 
         env = os.environ.copy()
-        if op_info.is_arc():
+        if op_info.use_proxy():
             env['SSHPROXY_RELAY_INFO'] = connectivity_utils.format_relay_info_string(op_info.relay_info)
 
         # Get ssh client before starting the clean up process in case there is an error in getting client.
-        command = [_get_ssh_client_path('ssh', op_info.ssh_client_folder), op_info.get_host()]
+        command = [get_ssh_client_path('ssh', op_info.ssh_client_folder), op_info.get_host()]
 
         if not op_info.cert_file and not op_info.private_key_file:
             # In this case, even if delete_credentials is true, there is nothing to clean-up.
@@ -85,7 +85,7 @@ def start_ssh_connection(op_info, delete_keys, delete_cert):
 def write_ssh_config(config_info, delete_keys, delete_cert):
     # if delete cert is true, then this is AAD login.
     config_text = config_info.get_config_text(delete_cert)
-    _issue_config_cleanup_warning(delete_cert, delete_keys, config_info.is_arc(),
+    _issue_config_cleanup_warning(delete_cert, delete_keys, config_info.use_proxy(),
                                   config_info.cert_file, config_info.relay_info_path,
                                   config_info.ssh_client_folder)
     if config_info.overwrite:
@@ -97,7 +97,7 @@ def write_ssh_config(config_info, delete_keys, delete_cert):
 
 
 def create_ssh_keyfile(private_key_file, ssh_client_folder=None):
-    sshkeygen_path = _get_ssh_client_path("ssh-keygen", ssh_client_folder)
+    sshkeygen_path = get_ssh_client_path("ssh-keygen", ssh_client_folder)
     command = [sshkeygen_path, "-f", private_key_file, "-t", "rsa", "-q", "-N", ""]
     logger.debug("Running ssh-keygen command %s", ' '.join(command))
     try:
@@ -109,7 +109,7 @@ def create_ssh_keyfile(private_key_file, ssh_client_folder=None):
 
 
 def get_ssh_cert_info(cert_file, ssh_client_folder=None):
-    sshkeygen_path = _get_ssh_client_path("ssh-keygen", ssh_client_folder)
+    sshkeygen_path = get_ssh_client_path("ssh-keygen", ssh_client_folder)
     command = [sshkeygen_path, "-L", "-f", cert_file]
     logger.debug("Running ssh-keygen command %s", ' '.join(command))
     try:
@@ -211,7 +211,7 @@ def _print_error_messages_from_ssh_log(log_file, connection_status, delete_cert)
         ssh_log.close()
 
 
-def _get_ssh_client_path(ssh_command="ssh", ssh_client_folder=None):
+def get_ssh_client_path(ssh_command="ssh", ssh_client_folder=None):
     if ssh_client_folder:
         ssh_path = os.path.join(ssh_client_folder, ssh_command)
         if platform.system() == 'Windows':

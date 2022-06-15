@@ -29,7 +29,7 @@ logger = log.get_logger(__name__)
 
 
 # Get the Access Details to connect to Arc Connectivity platform from the HybridConnectivity RP
-def get_relay_information(cmd, resource_group, vm_name, certificate_validity_in_seconds):
+def get_relay_information(cmd, op_info, certificate_validity_in_seconds):
     from azext_ssh._client_factory import cf_endpoint
     client = cf_endpoint(cmd.cli_ctx)
 
@@ -39,17 +39,22 @@ def get_relay_information(cmd, resource_group, vm_name, certificate_validity_in_
 
     try:
         t0 = time.time()
-        result = client.list_credentials(resource_group_name=resource_group, machine_name=vm_name,
-                                         endpoint_name="default", expiresin=certificate_validity_in_seconds)
+        if op_info.is_arc():
+            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group_name,
+                                      namespace="Microsoft.HybridCompute", type="machines", name=op_info.vm_name)
+        else:
+            az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group_name,
+                                      namespace="Microsoft.Compute", type="virtualMachines", name=op_info.vm_name)
+
+        result = client.list_credentials(resource_uri=az_resource_id, endpoint_name="default", expiresin=certificate_validity_in_seconds)
         time_elapsed = time.time() - t0
         telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
     except ResourceNotFoundError:
         logger.debug("Default Endpoint couldn't be found. Trying to create Default Endpoint.")
-        _create_default_endpoint(cmd, resource_group, vm_name, client)
+        _create_default_endpoint(az_resource_id, op_info.vm_name, op_info.resource_group_name, client)
         try:
             t0 = time.time()
-            result = client.list_credentials(resource_group_name=resource_group, machine_name=vm_name,
-                                             endpoint_name="default", expiresin=certificate_validity_in_seconds)
+            result = client.list_credentials(resource_uri=az_resource_id, endpoint_name="default", expiresin=certificate_validity_in_seconds)
             time_elapsed = time.time() - t0
             telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
         except Exception as e:
@@ -59,12 +64,10 @@ def get_relay_information(cmd, resource_group, vm_name, certificate_validity_in_
     return result
 
 
-def _create_default_endpoint(cmd, resource_group, vm_name, client):
-    az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=resource_group,
-                                 namespace="Microsoft.HybridCompute", type="machines", name=vm_name)
+def _create_default_endpoint(az_resource_id, vm_name, resource_group, client):
     endpoint_resource = {"id": az_resource_id, "type_properties_type": "default"}
     try:
-        client.create_or_update(resource_group, vm_name, "default", endpoint_resource)
+        client.create_or_update(az_resource_id, "default", endpoint_resource)
     except Exception as e:
         colorama.init()
         raise azclierror.UnauthorizedError(f"Unable to create Default Endpoint for {vm_name} in {resource_group}."
