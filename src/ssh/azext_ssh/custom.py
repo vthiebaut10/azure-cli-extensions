@@ -407,6 +407,9 @@ def _decide_resource_type(cmd, op_info):
 
     if is_arc_server and arc and arc.properties and arc.properties and arc.properties.os_name:
         os_type = arc.properties.os_name
+    
+    if os_type:
+        telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.TargetOSType': os_type})
 
     if os_type:
         telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.TargetOSType': os_type})
