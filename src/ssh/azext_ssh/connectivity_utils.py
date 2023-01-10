@@ -24,6 +24,12 @@ from knack import log
 from . import file_utils
 from . import constants as consts
 
+from .vendored_sdks.hybridconnectivity.models import (
+    ListCredentialsRequest,
+    EndpointResource,
+    ServiceConfiguration
+)
+
 logger = log.get_logger(__name__)
 
 
@@ -36,40 +42,74 @@ def get_relay_information(cmd, resource_group, vm_name, resource_type, certifica
        certificate_validity_in_seconds > consts.RELAY_INFO_MAXIMUM_DURATION_IN_SECONDS:
         certificate_validity_in_seconds = consts.RELAY_INFO_MAXIMUM_DURATION_IN_SECONDS
 
+    namespace = resource_type.split('/', 1)[0]
+    arc_type = resource_type.split('/', 1)[1]
+    resource_uri = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=resource_group,
+                                 namespace=namespace, type=arc_type, name=vm_name)
+    
+    _create_default_endpoint(resource_group, vm_name, client, resource_uri)
+    _call_list_credentials(client, resource_uri, certificate_validity_in_seconds)
+
+    '''
     try:
         t0 = time.time()
-        result = client.list_credentials(resource_group_name=resource_group, machine_name=vm_name,
-                                         resource_type=resource_type, endpoint_name="default",
-                                         expiresin=certificate_validity_in_seconds)
+        result = _call_list_credentials(client, resource_uri, certificate_validity_in_seconds)
         time_elapsed = time.time() - t0
         telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
     except ResourceNotFoundError:
         logger.debug("Default Endpoint couldn't be found. Trying to create Default Endpoint.")
-        _create_default_endpoint(cmd, resource_group, vm_name, resource_type, client)
+        _create_default_endpoint(resource_group, vm_name, client, resource_id)
         try:
             t0 = time.time()
-            result = client.list_credentials(resource_group_name=resource_group, machine_name=vm_name,
-                                             resource_type=resource_type, endpoint_name="default",
-                                             expiresin=certificate_validity_in_seconds)
+            result = _call_list_credentials(client, resource_uri, certificate_validity_in_seconds)
             time_elapsed = time.time() - t0
             telemetry.add_extension_event('ssh', {'Context.Default.AzureCLI.SSHListCredentialsTime': time_elapsed})
         except Exception as e:
             raise azclierror.ClientRequestError(f"Request for Azure Relay Information Failed:\n{str(e)}")
     except Exception as e:
+        # nested exceptions, might need to review how this looks
         raise azclierror.ClientRequestError(f"Request for Azure Relay Information Failed:\n{str(e)}")
+    return result
+    '''
+
+
+def _call_list_credentials(client, resource_uri, certificate_validity_in_seconds):
+    list_credentials_request = ListCredentialsRequest(service_name="SSH")
+    logger.debug("About to call list credentials.")
+    result = client.list_credentials(
+        resource_uri=resource_uri,
+        endpoint_name="default",
+        expiresin=certificate_validity_in_seconds,
+        list_credentials_request=list_credentials_request)
+    logger.debug("finished calling list credentials.")
     return result
 
 
-def _create_default_endpoint(cmd, resource_group, vm_name, resource_type, client):
-    namespace = resource_type.split('/', 1)[0]
-    arc_type = resource_type.split('/', 1)[1]
-    az_resource_id = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=resource_group,
-                                 namespace=namespace, type=arc_type, name=vm_name)
-    endpoint_resource = {"id": az_resource_id, "type_properties_type": "default"}
+def _call_get(client, resource_uri):
+    client.get(resource_uri=resource_uri, endpoint_name="default")
+
+
+def _remove_service_configuration(client, resource_uri):
+    endpointResource = EndpointResource(
+        type_properties_type='default',
+        resource_id=resource_uri,
+        service_configurations=[]
+        )
+    client.create_or_update(resource_uri=resource_uri, endpoint_name='default', endpoint_resource=endpointResource)
+
+
+def _create_default_endpoint(resource_group, vm_name, client, resource_id):
+    serviceConfig = ServiceConfiguration(service_name='SSH', port='22')
+    endpointResource = EndpointResource(
+        type_properties_type='default',
+        resource_id=resource_id,
+        service_configurations=[serviceConfig]
+        )
     try:
-        client.create_or_update(resource_group, vm_name, resource_type, "default", endpoint_resource)
+        client.create_or_update(resource_uri=resource_id, endpoint_name='default', endpoint_resource=endpointResource)
     except Exception as e:
         colorama.init()
+        # is there a way to check exactly if this is a unauthorized error? Try to repro this scenario
         raise azclierror.UnauthorizedError(f"Unable to create Default Endpoint for {vm_name} in {resource_group}."
                                            f"\nError: {str(e)}",
                                            colorama.Fore.YELLOW + "Contact Owner/Contributor of the resource."

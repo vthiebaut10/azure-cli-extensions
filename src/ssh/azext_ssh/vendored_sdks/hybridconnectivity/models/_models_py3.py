@@ -1,4 +1,5 @@
 # coding=utf-8
+# pylint: disable=too-many-lines
 # --------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for license information.
@@ -7,43 +8,47 @@
 # --------------------------------------------------------------------------
 
 import datetime
-from typing import List, Optional, Union
+from typing import List, Optional, TYPE_CHECKING, Union
 
-from azure.core.exceptions import HttpResponseError
-import msrest.serialization
+from .. import _serialization
 
-from ._hybrid_connectivity_management_api_enums import *
+if TYPE_CHECKING:
+    # pylint: disable=unused-import,ungrouped-imports
+    from .. import models as _models
 
 
-class EndpointAccessResource(msrest.serialization.Model):
+class EndpointAccessResource(_serialization.Model):
     """The endpoint access for the target resource.
 
     Variables are only populated by the server, and will be ignored when sending a request.
 
-    :param namespace_name: The namespace name.
-    :type namespace_name: str
-    :param namespace_name_suffix: The suffix domain name of relay namespace.
-    :type namespace_name_suffix: str
-    :param hybrid_connection_name: Azure Relay hybrid connection name for the resource.
-    :type hybrid_connection_name: str
+    :ivar namespace_name: The namespace name.
+    :vartype namespace_name: str
+    :ivar namespace_name_suffix: The suffix domain name of relay namespace.
+    :vartype namespace_name_suffix: str
+    :ivar hybrid_connection_name: Azure Relay hybrid connection name for the resource.
+    :vartype hybrid_connection_name: str
     :ivar access_key: Access key for hybrid connection.
     :vartype access_key: str
-    :param expires_on: The expiration of access key in unix time.
-    :type expires_on: long
+    :ivar expires_on: The expiration of access key in unix time.
+    :vartype expires_on: int
+    :ivar service_configuration_token: The token to access the enabled service.
+    :vartype service_configuration_token: str
     """
 
     _validation = {
-        'namespace_name': {'max_length': 200, 'min_length': 1},
-        'namespace_name_suffix': {'max_length': 100, 'min_length': 1},
-        'access_key': {'readonly': True},
+        "namespace_name": {"max_length": 200, "min_length": 1},
+        "namespace_name_suffix": {"max_length": 100, "min_length": 1},
+        "access_key": {"readonly": True},
     }
 
     _attribute_map = {
-        'namespace_name': {'key': 'relay.namespaceName', 'type': 'str'},
-        'namespace_name_suffix': {'key': 'relay.namespaceNameSuffix', 'type': 'str'},
-        'hybrid_connection_name': {'key': 'relay.hybridConnectionName', 'type': 'str'},
-        'access_key': {'key': 'relay.accessKey', 'type': 'str'},
-        'expires_on': {'key': 'relay.expiresOn', 'type': 'long'},
+        "namespace_name": {"key": "relay.namespaceName", "type": "str"},
+        "namespace_name_suffix": {"key": "relay.namespaceNameSuffix", "type": "str"},
+        "hybrid_connection_name": {"key": "relay.hybridConnectionName", "type": "str"},
+        "access_key": {"key": "relay.accessKey", "type": "str"},
+        "expires_on": {"key": "relay.expiresOn", "type": "int"},
+        "service_configuration_token": {"key": "relay.serviceConfigurationToken", "type": "str"},
     }
 
     def __init__(
@@ -53,17 +58,31 @@ class EndpointAccessResource(msrest.serialization.Model):
         namespace_name_suffix: Optional[str] = None,
         hybrid_connection_name: Optional[str] = None,
         expires_on: Optional[int] = None,
+        service_configuration_token: Optional[str] = None,
         **kwargs
     ):
-        super(EndpointAccessResource, self).__init__(**kwargs)
+        """
+        :keyword namespace_name: The namespace name.
+        :paramtype namespace_name: str
+        :keyword namespace_name_suffix: The suffix domain name of relay namespace.
+        :paramtype namespace_name_suffix: str
+        :keyword hybrid_connection_name: Azure Relay hybrid connection name for the resource.
+        :paramtype hybrid_connection_name: str
+        :keyword expires_on: The expiration of access key in unix time.
+        :paramtype expires_on: int
+        :keyword service_configuration_token: The token to access the enabled service.
+        :paramtype service_configuration_token: str
+        """
+        super().__init__(**kwargs)
         self.namespace_name = namespace_name
         self.namespace_name_suffix = namespace_name_suffix
         self.hybrid_connection_name = hybrid_connection_name
         self.access_key = None
         self.expires_on = expires_on
+        self.service_configuration_token = service_configuration_token
 
 
-class Resource(msrest.serialization.Model):
+class Resource(_serialization.Model):
     """Common fields that are returned in the response for all Azure Resource Manager resources.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -79,28 +98,58 @@ class Resource(msrest.serialization.Model):
     """
 
     _validation = {
-        'id': {'readonly': True},
-        'name': {'readonly': True},
-        'type': {'readonly': True},
+        "id": {"readonly": True},
+        "name": {"readonly": True},
+        "type": {"readonly": True},
     }
 
     _attribute_map = {
-        'id': {'key': 'id', 'type': 'str'},
-        'name': {'key': 'name', 'type': 'str'},
-        'type': {'key': 'type', 'type': 'str'},
+        "id": {"key": "id", "type": "str"},
+        "name": {"key": "name", "type": "str"},
+        "type": {"key": "type", "type": "str"},
     }
 
-    def __init__(
-        self,
-        **kwargs
-    ):
-        super(Resource, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
         self.id = None
         self.name = None
         self.type = None
 
 
-class EndpointResource(Resource):
+class ProxyResource(Resource):
+    """The resource model definition for a Azure Resource Manager proxy resource. It will not have tags and a location.
+
+    Variables are only populated by the server, and will be ignored when sending a request.
+
+    :ivar id: Fully qualified resource ID for the resource. Ex -
+     /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}.
+    :vartype id: str
+    :ivar name: The name of the resource.
+    :vartype name: str
+    :ivar type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or
+     "Microsoft.Storage/storageAccounts".
+    :vartype type: str
+    """
+
+    _validation = {
+        "id": {"readonly": True},
+        "name": {"readonly": True},
+        "type": {"readonly": True},
+    }
+
+    _attribute_map = {
+        "id": {"key": "id", "type": "str"},
+        "name": {"key": "name", "type": "str"},
+        "type": {"key": "type", "type": "str"},
+    }
+
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
+
+
+class EndpointResource(ProxyResource):  # pylint: disable=too-many-instance-attributes
     """The endpoint for the target resource.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -113,68 +162,96 @@ class EndpointResource(Resource):
     :ivar type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or
      "Microsoft.Storage/storageAccounts".
     :vartype type: str
-    :param type_properties_type: The type of endpoint. Possible values include: "default",
-     "custom".
-    :type type_properties_type: str or ~hybrid_connectivity_management_api.models.Type
-    :param resource_id: The resource Id of the connectivity endpoint (optional).
-    :type resource_id: str
-    :ivar provisioning_state:
+    :ivar type_properties_type: The type of endpoint. Known values are: "default" and "custom".
+    :vartype type_properties_type: str or ~azure.mgmt.hybridconnectivity.models.Type
+    :ivar resource_id: The resource Id of the connectivity endpoint (optional).
+    :vartype resource_id: str
+    :ivar provisioning_state: The resource provisioning state.
     :vartype provisioning_state: str
-    :param created_by: The identity that created the resource.
-    :type created_by: str
-    :param created_by_type: The type of identity that created the resource. Possible values
-     include: "User", "Application", "ManagedIdentity", "Key".
-    :type created_by_type: str or ~hybrid_connectivity_management_api.models.CreatedByType
-    :param created_at: The timestamp of resource creation (UTC).
-    :type created_at: ~datetime.datetime
-    :param last_modified_by: The identity that last modified the resource.
-    :type last_modified_by: str
-    :param last_modified_by_type: The type of identity that last modified the resource. Possible
-     values include: "User", "Application", "ManagedIdentity", "Key".
-    :type last_modified_by_type: str or ~hybrid_connectivity_management_api.models.CreatedByType
-    :param last_modified_at: The timestamp of resource last modification (UTC).
-    :type last_modified_at: ~datetime.datetime
+    :ivar service_configurations: The enabled service configurations.
+    :vartype service_configurations:
+     list[~azure.mgmt.hybridconnectivity.models.ServiceConfiguration]
+    :ivar created_by: The identity that created the resource.
+    :vartype created_by: str
+    :ivar created_by_type: The type of identity that created the resource. Known values are:
+     "User", "Application", "ManagedIdentity", and "Key".
+    :vartype created_by_type: str or ~azure.mgmt.hybridconnectivity.models.CreatedByType
+    :ivar created_at: The timestamp of resource creation (UTC).
+    :vartype created_at: ~datetime.datetime
+    :ivar last_modified_by: The identity that last modified the resource.
+    :vartype last_modified_by: str
+    :ivar last_modified_by_type: The type of identity that last modified the resource. Known values
+     are: "User", "Application", "ManagedIdentity", and "Key".
+    :vartype last_modified_by_type: str or ~azure.mgmt.hybridconnectivity.models.CreatedByType
+    :ivar last_modified_at: The timestamp of resource last modification (UTC).
+    :vartype last_modified_at: ~datetime.datetime
     """
 
     _validation = {
-        'id': {'readonly': True},
-        'name': {'readonly': True},
-        'type': {'readonly': True},
-        'provisioning_state': {'readonly': True},
+        "id": {"readonly": True},
+        "name": {"readonly": True},
+        "type": {"readonly": True},
+        "provisioning_state": {"readonly": True},
     }
 
     _attribute_map = {
-        'id': {'key': 'id', 'type': 'str'},
-        'name': {'key': 'name', 'type': 'str'},
-        'type': {'key': 'type', 'type': 'str'},
-        'type_properties_type': {'key': 'properties.type', 'type': 'str'},
-        'resource_id': {'key': 'properties.resourceId', 'type': 'str'},
-        'provisioning_state': {'key': 'properties.provisioningState', 'type': 'str'},
-        'created_by': {'key': 'systemData.createdBy', 'type': 'str'},
-        'created_by_type': {'key': 'systemData.createdByType', 'type': 'str'},
-        'created_at': {'key': 'systemData.createdAt', 'type': 'iso-8601'},
-        'last_modified_by': {'key': 'systemData.lastModifiedBy', 'type': 'str'},
-        'last_modified_by_type': {'key': 'systemData.lastModifiedByType', 'type': 'str'},
-        'last_modified_at': {'key': 'systemData.lastModifiedAt', 'type': 'iso-8601'},
+        "id": {"key": "id", "type": "str"},
+        "name": {"key": "name", "type": "str"},
+        "type": {"key": "type", "type": "str"},
+        "type_properties_type": {"key": "properties.type", "type": "str"},
+        "resource_id": {"key": "properties.resourceId", "type": "str"},
+        "provisioning_state": {"key": "properties.provisioningState", "type": "str"},
+        "service_configurations": {"key": "properties.serviceConfigurations", "type": "[ServiceConfiguration]"},
+        "created_by": {"key": "systemData.createdBy", "type": "str"},
+        "created_by_type": {"key": "systemData.createdByType", "type": "str"},
+        "created_at": {"key": "systemData.createdAt", "type": "iso-8601"},
+        "last_modified_by": {"key": "systemData.lastModifiedBy", "type": "str"},
+        "last_modified_by_type": {"key": "systemData.lastModifiedByType", "type": "str"},
+        "last_modified_at": {"key": "systemData.lastModifiedAt", "type": "iso-8601"},
     }
 
     def __init__(
         self,
         *,
-        type_properties_type: Optional[Union[str, "Type"]] = None,
+        type_properties_type: Optional[Union[str, "_models.Type"]] = None,
         resource_id: Optional[str] = None,
+        service_configurations: Optional[List["_models.ServiceConfiguration"]] = None,
         created_by: Optional[str] = None,
-        created_by_type: Optional[Union[str, "CreatedByType"]] = None,
+        created_by_type: Optional[Union[str, "_models.CreatedByType"]] = None,
         created_at: Optional[datetime.datetime] = None,
         last_modified_by: Optional[str] = None,
-        last_modified_by_type: Optional[Union[str, "CreatedByType"]] = None,
+        last_modified_by_type: Optional[Union[str, "_models.CreatedByType"]] = None,
         last_modified_at: Optional[datetime.datetime] = None,
         **kwargs
     ):
-        super(EndpointResource, self).__init__(**kwargs)
+        """
+        :keyword type_properties_type: The type of endpoint. Known values are: "default" and "custom".
+        :paramtype type_properties_type: str or ~azure.mgmt.hybridconnectivity.models.Type
+        :keyword resource_id: The resource Id of the connectivity endpoint (optional).
+        :paramtype resource_id: str
+        :keyword service_configurations: The enabled service configurations.
+        :paramtype service_configurations:
+         list[~azure.mgmt.hybridconnectivity.models.ServiceConfiguration]
+        :keyword created_by: The identity that created the resource.
+        :paramtype created_by: str
+        :keyword created_by_type: The type of identity that created the resource. Known values are:
+         "User", "Application", "ManagedIdentity", and "Key".
+        :paramtype created_by_type: str or ~azure.mgmt.hybridconnectivity.models.CreatedByType
+        :keyword created_at: The timestamp of resource creation (UTC).
+        :paramtype created_at: ~datetime.datetime
+        :keyword last_modified_by: The identity that last modified the resource.
+        :paramtype last_modified_by: str
+        :keyword last_modified_by_type: The type of identity that last modified the resource. Known
+         values are: "User", "Application", "ManagedIdentity", and "Key".
+        :paramtype last_modified_by_type: str or ~azure.mgmt.hybridconnectivity.models.CreatedByType
+        :keyword last_modified_at: The timestamp of resource last modification (UTC).
+        :paramtype last_modified_at: ~datetime.datetime
+        """
+        super().__init__(**kwargs)
         self.type_properties_type = type_properties_type
         self.resource_id = resource_id
         self.provisioning_state = None
+        self.service_configurations = service_configurations
         self.created_by = created_by
         self.created_by_type = created_by_type
         self.created_at = created_at
@@ -183,33 +260,35 @@ class EndpointResource(Resource):
         self.last_modified_at = last_modified_at
 
 
-class EndpointsList(msrest.serialization.Model):
+class EndpointsList(_serialization.Model):
     """The list of endpoints.
 
-    :param next_link: The link used to get the next page of endpoints list.
-    :type next_link: str
-    :param value: The list of endpoint.
-    :type value: list[~hybrid_connectivity_management_api.models.EndpointResource]
+    :ivar next_link: The link used to get the next page of endpoints list.
+    :vartype next_link: str
+    :ivar value: The list of endpoint.
+    :vartype value: list[~azure.mgmt.hybridconnectivity.models.EndpointResource]
     """
 
     _attribute_map = {
-        'next_link': {'key': 'nextLink', 'type': 'str'},
-        'value': {'key': 'value', 'type': '[EndpointResource]'},
+        "next_link": {"key": "nextLink", "type": "str"},
+        "value": {"key": "value", "type": "[EndpointResource]"},
     }
 
     def __init__(
-        self,
-        *,
-        next_link: Optional[str] = None,
-        value: Optional[List["EndpointResource"]] = None,
-        **kwargs
+        self, *, next_link: Optional[str] = None, value: Optional[List["_models.EndpointResource"]] = None, **kwargs
     ):
-        super(EndpointsList, self).__init__(**kwargs)
+        """
+        :keyword next_link: The link used to get the next page of endpoints list.
+        :paramtype next_link: str
+        :keyword value: The list of endpoint.
+        :paramtype value: list[~azure.mgmt.hybridconnectivity.models.EndpointResource]
+        """
+        super().__init__(**kwargs)
         self.next_link = next_link
         self.value = value
 
 
-class ErrorAdditionalInfo(msrest.serialization.Model):
+class ErrorAdditionalInfo(_serialization.Model):
     """The resource management error additional info.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -217,29 +296,27 @@ class ErrorAdditionalInfo(msrest.serialization.Model):
     :ivar type: The additional info type.
     :vartype type: str
     :ivar info: The additional info.
-    :vartype info: object
+    :vartype info: JSON
     """
 
     _validation = {
-        'type': {'readonly': True},
-        'info': {'readonly': True},
+        "type": {"readonly": True},
+        "info": {"readonly": True},
     }
 
     _attribute_map = {
-        'type': {'key': 'type', 'type': 'str'},
-        'info': {'key': 'info', 'type': 'object'},
+        "type": {"key": "type", "type": "str"},
+        "info": {"key": "info", "type": "object"},
     }
 
-    def __init__(
-        self,
-        **kwargs
-    ):
-        super(ErrorAdditionalInfo, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
         self.type = None
         self.info = None
 
 
-class ErrorDetail(msrest.serialization.Model):
+class ErrorDetail(_serialization.Model):
     """The error detail.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -251,32 +328,30 @@ class ErrorDetail(msrest.serialization.Model):
     :ivar target: The error target.
     :vartype target: str
     :ivar details: The error details.
-    :vartype details: list[~hybrid_connectivity_management_api.models.ErrorDetail]
+    :vartype details: list[~azure.mgmt.hybridconnectivity.models.ErrorDetail]
     :ivar additional_info: The error additional info.
-    :vartype additional_info: list[~hybrid_connectivity_management_api.models.ErrorAdditionalInfo]
+    :vartype additional_info: list[~azure.mgmt.hybridconnectivity.models.ErrorAdditionalInfo]
     """
 
     _validation = {
-        'code': {'readonly': True},
-        'message': {'readonly': True},
-        'target': {'readonly': True},
-        'details': {'readonly': True},
-        'additional_info': {'readonly': True},
+        "code": {"readonly": True},
+        "message": {"readonly": True},
+        "target": {"readonly": True},
+        "details": {"readonly": True},
+        "additional_info": {"readonly": True},
     }
 
     _attribute_map = {
-        'code': {'key': 'code', 'type': 'str'},
-        'message': {'key': 'message', 'type': 'str'},
-        'target': {'key': 'target', 'type': 'str'},
-        'details': {'key': 'details', 'type': '[ErrorDetail]'},
-        'additional_info': {'key': 'additionalInfo', 'type': '[ErrorAdditionalInfo]'},
+        "code": {"key": "code", "type": "str"},
+        "message": {"key": "message", "type": "str"},
+        "target": {"key": "target", "type": "str"},
+        "details": {"key": "details", "type": "[ErrorDetail]"},
+        "additional_info": {"key": "additionalInfo", "type": "[ErrorAdditionalInfo]"},
     }
 
-    def __init__(
-        self,
-        **kwargs
-    ):
-        super(ErrorDetail, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
         self.code = None
         self.message = None
         self.target = None
@@ -284,28 +359,211 @@ class ErrorDetail(msrest.serialization.Model):
         self.additional_info = None
 
 
-class ErrorResponse(msrest.serialization.Model):
+class ErrorResponse(_serialization.Model):
     """Common error response for all Azure Resource Manager APIs to return error details for failed operations. (This also follows the OData error response format.).
 
-    :param error: The error object.
-    :type error: ~hybrid_connectivity_management_api.models.ErrorDetail
+    :ivar error: The error object.
+    :vartype error: ~azure.mgmt.hybridconnectivity.models.ErrorDetail
     """
 
     _attribute_map = {
-        'error': {'key': 'error', 'type': 'ErrorDetail'},
+        "error": {"key": "error", "type": "ErrorDetail"},
+    }
+
+    def __init__(self, *, error: Optional["_models.ErrorDetail"] = None, **kwargs):
+        """
+        :keyword error: The error object.
+        :paramtype error: ~azure.mgmt.hybridconnectivity.models.ErrorDetail
+        """
+        super().__init__(**kwargs)
+        self.error = error
+
+
+class IngressGatewayResource(_serialization.Model):
+    """The ingress gateway access credentials.
+
+    Variables are only populated by the server, and will be ignored when sending a request.
+
+    :ivar hostname: The ingress hostname.
+    :vartype hostname: str
+    :ivar server_id: The arc ingress gateway server app id.
+    :vartype server_id: str
+    :ivar tenant_id: The target resource home tenant id.
+    :vartype tenant_id: str
+    :ivar namespace_name: The namespace name.
+    :vartype namespace_name: str
+    :ivar namespace_name_suffix: The suffix domain name of relay namespace.
+    :vartype namespace_name_suffix: str
+    :ivar hybrid_connection_name: Azure Relay hybrid connection name for the resource.
+    :vartype hybrid_connection_name: str
+    :ivar access_key: Access key for hybrid connection.
+    :vartype access_key: str
+    :ivar expires_on: The expiration of access key in unix time.
+    :vartype expires_on: int
+    :ivar service_configuration_token: The token to access the enabled service.
+    :vartype service_configuration_token: str
+    """
+
+    _validation = {
+        "namespace_name": {"max_length": 200, "min_length": 1},
+        "namespace_name_suffix": {"max_length": 100, "min_length": 1},
+        "access_key": {"readonly": True},
+    }
+
+    _attribute_map = {
+        "hostname": {"key": "ingress.hostname", "type": "str"},
+        "server_id": {"key": "ingress.aadProfile.serverId", "type": "str"},
+        "tenant_id": {"key": "ingress.aadProfile.tenantId", "type": "str"},
+        "namespace_name": {"key": "relay.namespaceName", "type": "str"},
+        "namespace_name_suffix": {"key": "relay.namespaceNameSuffix", "type": "str"},
+        "hybrid_connection_name": {"key": "relay.hybridConnectionName", "type": "str"},
+        "access_key": {"key": "relay.accessKey", "type": "str"},
+        "expires_on": {"key": "relay.expiresOn", "type": "int"},
+        "service_configuration_token": {"key": "relay.serviceConfigurationToken", "type": "str"},
     }
 
     def __init__(
         self,
         *,
-        error: Optional["ErrorDetail"] = None,
+        hostname: Optional[str] = None,
+        server_id: Optional[str] = None,
+        tenant_id: Optional[str] = None,
+        namespace_name: Optional[str] = None,
+        namespace_name_suffix: Optional[str] = None,
+        hybrid_connection_name: Optional[str] = None,
+        expires_on: Optional[int] = None,
+        service_configuration_token: Optional[str] = None,
         **kwargs
     ):
-        super(ErrorResponse, self).__init__(**kwargs)
-        self.error = error
+        """
+        :keyword hostname: The ingress hostname.
+        :paramtype hostname: str
+        :keyword server_id: The arc ingress gateway server app id.
+        :paramtype server_id: str
+        :keyword tenant_id: The target resource home tenant id.
+        :paramtype tenant_id: str
+        :keyword namespace_name: The namespace name.
+        :paramtype namespace_name: str
+        :keyword namespace_name_suffix: The suffix domain name of relay namespace.
+        :paramtype namespace_name_suffix: str
+        :keyword hybrid_connection_name: Azure Relay hybrid connection name for the resource.
+        :paramtype hybrid_connection_name: str
+        :keyword expires_on: The expiration of access key in unix time.
+        :paramtype expires_on: int
+        :keyword service_configuration_token: The token to access the enabled service.
+        :paramtype service_configuration_token: str
+        """
+        super().__init__(**kwargs)
+        self.hostname = hostname
+        self.server_id = server_id
+        self.tenant_id = tenant_id
+        self.namespace_name = namespace_name
+        self.namespace_name_suffix = namespace_name_suffix
+        self.hybrid_connection_name = hybrid_connection_name
+        self.access_key = None
+        self.expires_on = expires_on
+        self.service_configuration_token = service_configuration_token
 
 
-class Operation(msrest.serialization.Model):
+class ListCredentialsRequest(_serialization.Model):
+    """Represent ListCredentials Request object.
+
+    :ivar service_name: The name of the service. Known values are: "SSH" and "WAC".
+    :vartype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+    """
+
+    _attribute_map = {
+        "service_name": {"key": "serviceName", "type": "str"},
+    }
+
+    def __init__(self, *, service_name: Optional[Union[str, "_models.ServiceName"]] = None, **kwargs):
+        """
+        :keyword service_name: The name of the service. Known values are: "SSH" and "WAC".
+        :paramtype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+        """
+        super().__init__(**kwargs)
+        self.service_name = service_name
+
+
+class ManagedProxyRequest(_serialization.Model):
+    """Represent ManageProxy Request object.
+
+    All required parameters must be populated in order to send to Azure.
+
+    :ivar service: The name of the service. Required.
+    :vartype service: str
+    :ivar hostname: The target host name.
+    :vartype hostname: str
+    :ivar service_name: The name of the service. Known values are: "SSH" and "WAC".
+    :vartype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+    """
+
+    _validation = {
+        "service": {"required": True},
+    }
+
+    _attribute_map = {
+        "service": {"key": "service", "type": "str"},
+        "hostname": {"key": "hostname", "type": "str"},
+        "service_name": {"key": "serviceName", "type": "str"},
+    }
+
+    def __init__(
+        self,
+        *,
+        service: str,
+        hostname: Optional[str] = None,
+        service_name: Optional[Union[str, "_models.ServiceName"]] = None,
+        **kwargs
+    ):
+        """
+        :keyword service: The name of the service. Required.
+        :paramtype service: str
+        :keyword hostname: The target host name.
+        :paramtype hostname: str
+        :keyword service_name: The name of the service. Known values are: "SSH" and "WAC".
+        :paramtype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+        """
+        super().__init__(**kwargs)
+        self.service = service
+        self.hostname = hostname
+        self.service_name = service_name
+
+
+class ManagedProxyResource(_serialization.Model):
+    """Managed Proxy.
+
+    All required parameters must be populated in order to send to Azure.
+
+    :ivar proxy: The short lived proxy name. Required.
+    :vartype proxy: str
+    :ivar expires_on: The expiration time of short lived proxy name in unix epoch. Required.
+    :vartype expires_on: int
+    """
+
+    _validation = {
+        "proxy": {"required": True},
+        "expires_on": {"required": True},
+    }
+
+    _attribute_map = {
+        "proxy": {"key": "proxy", "type": "str"},
+        "expires_on": {"key": "expiresOn", "type": "int"},
+    }
+
+    def __init__(self, *, proxy: str, expires_on: int, **kwargs):
+        """
+        :keyword proxy: The short lived proxy name. Required.
+        :paramtype proxy: str
+        :keyword expires_on: The expiration time of short lived proxy name in unix epoch. Required.
+        :paramtype expires_on: int
+        """
+        super().__init__(**kwargs)
+        self.proxy = proxy
+        self.expires_on = expires_on
+
+
+class Operation(_serialization.Model):
     """Details of a REST API operation, returned from the Resource Provider Operations API.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -313,42 +571,41 @@ class Operation(msrest.serialization.Model):
     :ivar name: The name of the operation, as per Resource-Based Access Control (RBAC). Examples:
      "Microsoft.Compute/virtualMachines/write", "Microsoft.Compute/virtualMachines/capture/action".
     :vartype name: str
-    :ivar is_data_action: Whether the operation applies to data-plane. This is "true" for data-
-     plane operations and "false" for ARM/control-plane operations.
+    :ivar is_data_action: Whether the operation applies to data-plane. This is "true" for
+     data-plane operations and "false" for ARM/control-plane operations.
     :vartype is_data_action: bool
-    :param display: Localized display information for this particular operation.
-    :type display: ~hybrid_connectivity_management_api.models.OperationDisplay
+    :ivar display: Localized display information for this particular operation.
+    :vartype display: ~azure.mgmt.hybridconnectivity.models.OperationDisplay
     :ivar origin: The intended executor of the operation; as in Resource Based Access Control
-     (RBAC) and audit logs UX. Default value is "user,system". Possible values include: "user",
-     "system", "user,system".
-    :vartype origin: str or ~hybrid_connectivity_management_api.models.Origin
+     (RBAC) and audit logs UX. Default value is "user,system". Known values are: "user", "system",
+     and "user,system".
+    :vartype origin: str or ~azure.mgmt.hybridconnectivity.models.Origin
     :ivar action_type: Enum. Indicates the action type. "Internal" refers to actions that are for
-     internal only APIs. Possible values include: "Internal".
-    :vartype action_type: str or ~hybrid_connectivity_management_api.models.ActionType
+     internal only APIs. "Internal"
+    :vartype action_type: str or ~azure.mgmt.hybridconnectivity.models.ActionType
     """
 
     _validation = {
-        'name': {'readonly': True},
-        'is_data_action': {'readonly': True},
-        'origin': {'readonly': True},
-        'action_type': {'readonly': True},
+        "name": {"readonly": True},
+        "is_data_action": {"readonly": True},
+        "origin": {"readonly": True},
+        "action_type": {"readonly": True},
     }
 
     _attribute_map = {
-        'name': {'key': 'name', 'type': 'str'},
-        'is_data_action': {'key': 'isDataAction', 'type': 'bool'},
-        'display': {'key': 'display', 'type': 'OperationDisplay'},
-        'origin': {'key': 'origin', 'type': 'str'},
-        'action_type': {'key': 'actionType', 'type': 'str'},
+        "name": {"key": "name", "type": "str"},
+        "is_data_action": {"key": "isDataAction", "type": "bool"},
+        "display": {"key": "display", "type": "OperationDisplay"},
+        "origin": {"key": "origin", "type": "str"},
+        "action_type": {"key": "actionType", "type": "str"},
     }
 
-    def __init__(
-        self,
-        *,
-        display: Optional["OperationDisplay"] = None,
-        **kwargs
-    ):
-        super(Operation, self).__init__(**kwargs)
+    def __init__(self, *, display: Optional["_models.OperationDisplay"] = None, **kwargs):
+        """
+        :keyword display: Localized display information for this particular operation.
+        :paramtype display: ~azure.mgmt.hybridconnectivity.models.OperationDisplay
+        """
+        super().__init__(**kwargs)
         self.name = None
         self.is_data_action = None
         self.display = display
@@ -356,7 +613,7 @@ class Operation(msrest.serialization.Model):
         self.action_type = None
 
 
-class OperationDisplay(msrest.serialization.Model):
+class OperationDisplay(_serialization.Model):
     """Localized display information for this particular operation.
 
     Variables are only populated by the server, and will be ignored when sending a request.
@@ -376,89 +633,79 @@ class OperationDisplay(msrest.serialization.Model):
     """
 
     _validation = {
-        'provider': {'readonly': True},
-        'resource': {'readonly': True},
-        'operation': {'readonly': True},
-        'description': {'readonly': True},
+        "provider": {"readonly": True},
+        "resource": {"readonly": True},
+        "operation": {"readonly": True},
+        "description": {"readonly": True},
     }
 
     _attribute_map = {
-        'provider': {'key': 'provider', 'type': 'str'},
-        'resource': {'key': 'resource', 'type': 'str'},
-        'operation': {'key': 'operation', 'type': 'str'},
-        'description': {'key': 'description', 'type': 'str'},
+        "provider": {"key": "provider", "type": "str"},
+        "resource": {"key": "resource", "type": "str"},
+        "operation": {"key": "operation", "type": "str"},
+        "description": {"key": "description", "type": "str"},
     }
 
-    def __init__(
-        self,
-        **kwargs
-    ):
-        super(OperationDisplay, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
         self.provider = None
         self.resource = None
         self.operation = None
         self.description = None
 
 
-class OperationListResult(msrest.serialization.Model):
+class OperationListResult(_serialization.Model):
     """A list of REST API operations supported by an Azure Resource Provider. It contains an URL link to get the next set of results.
 
     Variables are only populated by the server, and will be ignored when sending a request.
 
     :ivar value: List of operations supported by the resource provider.
-    :vartype value: list[~hybrid_connectivity_management_api.models.Operation]
+    :vartype value: list[~azure.mgmt.hybridconnectivity.models.Operation]
     :ivar next_link: URL to get the next set of operation list results (if there are any).
     :vartype next_link: str
     """
 
     _validation = {
-        'value': {'readonly': True},
-        'next_link': {'readonly': True},
+        "value": {"readonly": True},
+        "next_link": {"readonly": True},
     }
 
     _attribute_map = {
-        'value': {'key': 'value', 'type': '[Operation]'},
-        'next_link': {'key': 'nextLink', 'type': 'str'},
+        "value": {"key": "value", "type": "[Operation]"},
+        "next_link": {"key": "nextLink", "type": "str"},
     }
 
-    def __init__(
-        self,
-        **kwargs
-    ):
-        super(OperationListResult, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """ """
+        super().__init__(**kwargs)
         self.value = None
         self.next_link = None
 
 
-class ProxyResource(Resource):
-    """The resource model definition for a Azure Resource Manager proxy resource. It will not have tags and a location.
+class ServiceConfiguration(_serialization.Model):
+    """The service configuration object definition.
 
-    Variables are only populated by the server, and will be ignored when sending a request.
-
-    :ivar id: Fully qualified resource ID for the resource. Ex -
-     /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}.
-    :vartype id: str
-    :ivar name: The name of the resource.
-    :vartype name: str
-    :ivar type: The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or
-     "Microsoft.Storage/storageAccounts".
-    :vartype type: str
+    :ivar service_name: The type of service enabled. Known values are: "SSH" and "WAC".
+    :vartype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+    :ivar port: The port on which service is enabled.
+    :vartype port: str
     """
 
-    _validation = {
-        'id': {'readonly': True},
-        'name': {'readonly': True},
-        'type': {'readonly': True},
-    }
-
     _attribute_map = {
-        'id': {'key': 'id', 'type': 'str'},
-        'name': {'key': 'name', 'type': 'str'},
-        'type': {'key': 'type', 'type': 'str'},
+        "service_name": {"key": "serviceName", "type": "str"},
+        "port": {"key": "port", "type": "str"},
     }
 
     def __init__(
-        self,
-        **kwargs
+        self, *, service_name: Optional[Union[str, "_models.ServiceName"]] = None, port: Optional[str] = None, **kwargs
     ):
-        super(ProxyResource, self).__init__(**kwargs)
+        """
+        :keyword service_name: The type of service enabled. Known values are: "SSH" and "WAC".
+        :paramtype service_name: str or ~azure.mgmt.hybridconnectivity.models.ServiceName
+        :keyword port: The port on which service is enabled.
+        :paramtype port: str
+        """
+        super().__init__(**kwargs)
+        self.service_name = service_name
+        self.port = port

@@ -6,52 +6,54 @@
 # Changes may cause incorrect behavior and will be lost if the code is regenerated.
 # --------------------------------------------------------------------------
 
-try:
-    from ._models_py3 import EndpointAccessResource
-    from ._models_py3 import EndpointResource
-    from ._models_py3 import EndpointsList
-    from ._models_py3 import ErrorAdditionalInfo
-    from ._models_py3 import ErrorDetail
-    from ._models_py3 import ErrorResponse
-    from ._models_py3 import Operation
-    from ._models_py3 import OperationDisplay
-    from ._models_py3 import OperationListResult
-    from ._models_py3 import ProxyResource
-    from ._models_py3 import Resource
-except (SyntaxError, ImportError):
-    from ._models import EndpointAccessResource  # type: ignore
-    from ._models import EndpointResource  # type: ignore
-    from ._models import EndpointsList  # type: ignore
-    from ._models import ErrorAdditionalInfo  # type: ignore
-    from ._models import ErrorDetail  # type: ignore
-    from ._models import ErrorResponse  # type: ignore
-    from ._models import Operation  # type: ignore
-    from ._models import OperationDisplay  # type: ignore
-    from ._models import OperationListResult  # type: ignore
-    from ._models import ProxyResource  # type: ignore
-    from ._models import Resource  # type: ignore
+from ._models_py3 import EndpointAccessResource
+from ._models_py3 import EndpointResource
+from ._models_py3 import EndpointsList
+from ._models_py3 import ErrorAdditionalInfo
+from ._models_py3 import ErrorDetail
+from ._models_py3 import ErrorResponse
+from ._models_py3 import IngressGatewayResource
+from ._models_py3 import ListCredentialsRequest
+from ._models_py3 import ManagedProxyRequest
+from ._models_py3 import ManagedProxyResource
+from ._models_py3 import Operation
+from ._models_py3 import OperationDisplay
+from ._models_py3 import OperationListResult
+from ._models_py3 import ProxyResource
+from ._models_py3 import Resource
+from ._models_py3 import ServiceConfiguration
 
-from ._hybrid_connectivity_management_api_enums import (
-    ActionType,
-    CreatedByType,
-    Origin,
-    Type,
-)
+from ._hybrid_connectivity_management_api_enums import ActionType
+from ._hybrid_connectivity_management_api_enums import CreatedByType
+from ._hybrid_connectivity_management_api_enums import Origin
+from ._hybrid_connectivity_management_api_enums import ServiceName
+from ._hybrid_connectivity_management_api_enums import Type
+from ._patch import __all__ as _patch_all
+from ._patch import *  # pylint: disable=unused-wildcard-import
+from ._patch import patch_sdk as _patch_sdk
 
 __all__ = [
-    'EndpointAccessResource',
-    'EndpointResource',
-    'EndpointsList',
-    'ErrorAdditionalInfo',
-    'ErrorDetail',
-    'ErrorResponse',
-    'Operation',
-    'OperationDisplay',
-    'OperationListResult',
-    'ProxyResource',
-    'Resource',
-    'ActionType',
-    'CreatedByType',
-    'Origin',
-    'Type',
+    "EndpointAccessResource",
+    "EndpointResource",
+    "EndpointsList",
+    "ErrorAdditionalInfo",
+    "ErrorDetail",
+    "ErrorResponse",
+    "IngressGatewayResource",
+    "ListCredentialsRequest",
+    "ManagedProxyRequest",
+    "ManagedProxyResource",
+    "Operation",
+    "OperationDisplay",
+    "OperationListResult",
+    "ProxyResource",
+    "Resource",
+    "ServiceConfiguration",
+    "ActionType",
+    "CreatedByType",
+    "Origin",
+    "ServiceName",
+    "Type",
 ]
+__all__.extend([p for p in _patch_all if p not in __all__])
+_patch_sdk()
