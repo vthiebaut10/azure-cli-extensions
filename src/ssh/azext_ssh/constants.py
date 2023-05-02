@@ -5,8 +5,8 @@
 from colorama import Fore
 from colorama import Style
 
-CLIENT_PROXY_VERSION = "1.3.017634"
-CLIENT_PROXY_RELEASE = "release01-11-21"
+CLIENT_PROXY_VERSION = "1.3.022941"
+CLIENT_PROXY_RELEASE = "release21-04-23"
 CLIENT_PROXY_STORAGE_URL = "https://sshproxysa.blob.core.windows.net"
 CLEANUP_TOTAL_TIME_LIMIT_IN_SECONDS = 120
 CLEANUP_TIME_INTERVAL_IN_SECONDS = 10
@@ -17,6 +17,9 @@ RECOMMENDATION_SSH_CLIENT_NOT_FOUND = (Fore.YELLOW + "Ensure OpenSSH is installe
                                        "--ssh-client-folder to provide OpenSSH folder path." + Style.RESET_ALL)
 RECOMMENDATION_RESOURCE_NOT_FOUND = (Fore.YELLOW + "Please ensure the active subscription is set properly "
                                      "and resource exists." + Style.RESET_ALL)
+RECOMMENDATION_FAILED_TO_CREATE_ENDPOINT = (Fore.YELLOW + "Contact Owner/Contributor of the resource. " +
+                                            "For more information, see: https://aka.ms/ssharc/create-default-endpoint" +
+                                            Style.RESET_ALL)
 RDP_TERMINATE_SSH_WAIT_TIME_IN_SECONDS = 30
 
 ARC_RESOURCE_TYPE_PLACEHOLDER = "arc_resource_type_placeholder"
