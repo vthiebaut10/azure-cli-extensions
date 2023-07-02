@@ -11,16 +11,6 @@
 from azure.cli.core.commands.client_factory import get_mgmt_service_client
 
 
-def cf_hybridconnectivity_cl(cli_ctx, *_):
-    from azext_ssh.vendored_sdks.hybridconnectivity import HybridConnectivityManagementAPI
-    return get_mgmt_service_client(cli_ctx,
-                                   HybridConnectivityManagementAPI)
-
-
-def cf_endpoint(cli_ctx, *_):
-    return cf_hybridconnectivity_cl(cli_ctx).endpoints
-
-
 def cf_connectedmachine_cl(cli_ctx, *_):
     from azext_ssh.vendored_sdks.connectedmachine import ConnectedMachine
     return get_mgmt_service_client(cli_ctx,
