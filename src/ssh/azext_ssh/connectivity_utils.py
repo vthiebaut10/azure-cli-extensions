@@ -29,16 +29,15 @@ logger = log.get_logger(__name__)
 
 
 # Get the Access Details to connect to Arc Connectivity platform from the HybridConnectivity RP
-def get_relay_information(cmd, resource_group, vm_name, resource_type,
-                          certificate_validity_in_seconds, port, yes_without_prompt):
+def get_relay_information(cmd, op_info, certificate_validity_in_seconds):
     if not certificate_validity_in_seconds or \
        certificate_validity_in_seconds > consts.RELAY_INFO_MAXIMUM_DURATION_IN_SECONDS:
         certificate_validity_in_seconds = consts.RELAY_INFO_MAXIMUM_DURATION_IN_SECONDS
 
-    namespace = resource_type.split('/', 1)[0]
-    arc_type = resource_type.split('/', 1)[1]
-    resource_uri = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=resource_group,
-                               namespace=namespace, type=arc_type, name=vm_name)
+    namespace = op_info.resource_type.split('/', 1)[0]
+    arc_type = op_info.resource_type.split('/', 1)[1]
+    resource_uri = resource_id(subscription=get_subscription_id(cmd.cli_ctx), resource_group=op_info.resource_group,
+                               namespace=namespace, type=arc_type, name=op_info.vm_name)
 
     cred = None
     new_service_config = False
@@ -53,7 +52,7 @@ def get_relay_information(cmd, resource_group, vm_name, resource_type,
         raise azclierror.UnclassifiedUserFault(f"Unable to retrieve relay information. Failed with error: {str(e)}")
 
     if not cred:
-        _create_service_configuration(cmd, resource_uri, port, yes_without_prompt)
+        _create_service_configuration(cmd, resource_uri, op_info.port, op_info.yes_without_prompt)
         new_service_config = True
         try:
             cred = _list_credentials(cmd, resource_uri, certificate_validity_in_seconds)
@@ -61,8 +60,8 @@ def get_relay_information(cmd, resource_group, vm_name, resource_type,
             raise azclierror.UnclassifiedUserFault(f"Unable to get relay information. Failed with error: {str(e)}")
         _handle_relay_connection_delay(cmd, "Setting up service configuration")
     else:
-        if not _check_service_configuration(cmd, resource_uri, port):
-            _create_service_configuration(cmd, resource_uri, port, yes_without_prompt)
+        if not _check_service_configuration(cmd, resource_uri, op_info.port):
+            _create_service_configuration(cmd, resource_uri, op_info.port, op_info.yes_without_prompt)
             new_service_config = True
             try:
                 cred = _list_credentials(cmd, resource_uri, certificate_validity_in_seconds)
@@ -72,7 +71,7 @@ def get_relay_information(cmd, resource_group, vm_name, resource_type,
     return (cred, new_service_config)
 
 
-def _check_service_configuration(cmd, resource_uri, port):
+def _check_service_configuration(cmd, resource_uri, port):   
     from .aaz.latest.hybrid_connectivity.endpoint.service_configuration import Show as ShowServiceConfig
     show_service_config_args = {
         'endpoint_name': 'default',
@@ -129,7 +128,12 @@ def _create_default_endpoint(cmd, resource_uri):
     return endpoint
 
 
-def _create_service_configuration(cmd, resource_uri, port, yes_without_prompt):
+def _create_service_configuration(cmd, resource_uri, port, yes_without_prompt, arc_agent_version):
+
+    from packaging import version
+    if version.parse(arc_agent_version) < version.parse(consts.AGENT_MINIMUM_VERSION):
+        return None
+        
     from .aaz.latest.hybrid_connectivity.endpoint.service_configuration import Create as CreateServiceConfig
     prompt = (f"The port {port} that you are trying to connect to is not allowed "
               f"for SSH connections for this resource. Would you like to update "

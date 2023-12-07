@@ -25,7 +25,7 @@ from . import ssh_info
 from . import file_utils
 from . import constants as const
 from . import resource_type_utils
-from . import target_os_utils
+from . import azure_utils
 
 logger = log.get_logger(__name__)
 
@@ -61,7 +61,7 @@ def ssh_vm(cmd, resource_group_name=None, vm_name=None, ssh_ip=None, public_key_
                                       ssh_client_folder, ssh_args, delete_credentials, resource_type,
                                       ssh_proxy_folder, credentials_folder, winrdp, yes_without_prompt)
     ssh_session.resource_type = resource_type_utils.decide_resource_type(cmd, ssh_session)
-    target_os_utils.handle_target_os_type(cmd, ssh_session)
+    ssh_session.arc_agent_version = azure_utils.get_and_handle_target_information_from_azure(cmd, ssh_session)
 
     _do_ssh_op(cmd, ssh_session, op_call)
 
@@ -84,7 +84,7 @@ def ssh_config(cmd, config_path, resource_group_name=None, vm_name=None, ssh_ip=
     op_call = ssh_utils.write_ssh_config
 
     config_session.resource_type = resource_type_utils.decide_resource_type(cmd, config_session)
-    target_os_utils.handle_target_os_type(cmd, config_session)
+    config_session.arc_agent_version = azure_utils.get_and_handle_target_information_from_azure(cmd, config_session)
 
     # if the folder doesn't exist, this extension won't create a new one.
     config_folder = os.path.dirname(config_session.config_path)
@@ -190,8 +190,7 @@ def _do_ssh_op(cmd, op_info, op_call):
         if op_info.is_arc():
             op_info.proxy_path = connectivity_utils.get_client_side_proxy(op_info.ssh_proxy_folder)
             (op_info.relay_info, op_info.new_service_config) = connectivity_utils.get_relay_information(
-                cmd, op_info.resource_group_name, op_info.vm_name, op_info.resource_type,
-                cert_lifetime, op_info.port, op_info.yes_without_prompt)
+                cmd, op_info, cert_lifetime)
     except Exception as e:
         if delete_keys or delete_cert:
             logger.debug("An error occured before operation concluded. Deleting generated keys: %s %s %s",

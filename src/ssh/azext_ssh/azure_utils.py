@@ -14,7 +14,7 @@ logger = log.get_logger(__name__)
 
 
 # Send target OS type telemetry and check if authentication options are valid for that OS.
-def handle_target_os_type(cmd, op_info):
+def get_and_handle_target_information_from_azure(cmd, op_info):
     os_type = None
     agent_version = None
 
@@ -46,7 +46,9 @@ def handle_target_os_type(cmd, op_info):
                                "Please update to the latest version.", agent_version)
         except Exception:
             # if there is some problem with the string handling of this check we don't want the execution to fail
-            return
+            return agent_version
+    
+    return agent_version
 
 
 def _get_azure_vm_os(cmd, resource_group_name, vm_name):
